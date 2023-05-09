@@ -11,6 +11,16 @@ class User(AbstractUser):
         MODERATOR = 'moderator', 'модератор'
         ADMIN = 'admin', 'администратор'
 
+    username = models.TextField(
+        unique=True,
+        validators=[
+            RegexValidator(
+                regex=r'^[\w.@+-]+\z',
+                code=Response(status=status.HTTP_400_BAD_REQUEST),
+            )
+        ],
+    )
+
     bio = models.TextField(
         'Биография',
         blank=True,
