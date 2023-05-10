@@ -36,7 +36,7 @@ class User(AbstractUser):
 
 
 class Categories(models.Model):
-    name = models.CharField(max_length=200, verbose_name='Название категории')
+    name = models.CharField(max_length=256, verbose_name='Название категории')
     slug = models.SlugField(
         max_length=50,
         unique=True,
@@ -50,24 +50,44 @@ class Categories(models.Model):
 
 
 class Genres(models.Model):
-    name = models.CharField(max_length=200, verbose_name='Название жанра')
+    name = models.CharField(max_length=256, verbose_name='Название жанра')
     slug = models.SlugField(
-        unique=True, validators=[RegexValidator(regex=r'^[-a-zA-Z0-9_]+$')]
+        max_length=50,
+        unique=True,
+        validators=[
+            RegexValidator(
+                regex=r'^[-a-zA-Z0-9_]+$',
+                code=status.HTTP_400_BAD_REQUEST,
+            )
+        ],
     )
 
 
 class Titles(models.Model):
     name = models.CharField(
         max_length=256,
-        verbose_name='Название произведения',
+        verbose_name='название',
     )
-    pub_date = models.IntegerField()
-    description = models.TextField(verbose_name='Описание произведения')
+    year = models.IntegerField(verbose_name='год выпуска')
+    description = models.TextField(verbose_name='описание')
     categories = models.ForeignKey(
         Categories,
         related_name='title',
-        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
     )
-    genres = models.ForeignKey(
-        Genres, related_name='title', on_delete=models.CASCADE
+    genres = models.ManyToManyField(
+        Genres,
+        through='GenreTitle',
+        related_name='title',
+        blank=True,
     )
+
+
+class GenreTitle(models.Model):
+    genre = models.ForeignKey(Genres, on_delete=models.CASCADE)
+    title = models.ForeignKey(Titles, on_delete=models.CASCADE)
+
+    def str(self):
+        return f'{self.title} {self.genre}'
