@@ -12,26 +12,47 @@ class User(AbstractUser):
         ADMIN = 'admin', 'администратор'
 
     username = models.TextField(
+        max_length=150,
         unique=True,
         validators=[
             RegexValidator(
                 regex=r'^[\w.@+-]+\Z',
-                message='Username must be in the format: '
-                'litters,numbers, @, ., +, -,',
+                message='150 characters or fewer. '
+                'Letters, digits and @/./+/-/_ only',
                 code=status.HTTP_400_BAD_REQUEST,
             )
         ],
     )
-
-    bio = models.TextField(
-        'Биография',
+    email = models.EmailField(
+        max_length=254,
+        unique=True,
+        blank=False,
+    )
+    first_name = models.CharField(
+        max_length=150,
         blank=True,
+        verbose_name='Имя',
+    )
+    last_name = models.CharField(
+        max_length=150,
+        blank=True,
+        verbose_name='Фамилия',
+    )
+    bio = models.TextField(
+        blank=True,
+        verbose_name='Биография',
     )
     role = models.CharField(
         max_length=10,
         choices=Role.choices,
         default=Role.USER,
         verbose_name='Роли',
+    )
+    confirmation_code = models.CharField(
+        max_length=150,
+        null=True,
+        blank=False,
+        verbose_name='Код подтверждения',
     )
 
 
