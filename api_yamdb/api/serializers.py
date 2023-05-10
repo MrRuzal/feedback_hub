@@ -1,21 +1,21 @@
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
-from reviews.models import Titles, Categories, Genres, Review, Comment
+from reviews.models import Titles, Categories, Genres, Review, Comment, User
 
 
-class TitleSerializer(serializers.ModelSerializers):
+class TitleSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Titles
 
 
-class CategoriesSerializer(serializers.ModelSerializers):
+class CategoriesSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Categories
 
 
-class GenresSerializer(serializers.ModelSerializers):
+class GenresSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Genres
@@ -67,3 +67,9 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'text', 'author', 'pub_date')
         model = Comment
+
+
+class TokenSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    confirmation_code = serializers.CharField()
+
