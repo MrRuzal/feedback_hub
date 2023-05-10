@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from rest_framework import status
+from django.contrib.auth.models import User
 
 
 class User(AbstractUser):
@@ -14,7 +15,9 @@ class User(AbstractUser):
         unique=True,
         validators=[
             RegexValidator(
-                regex=r'^[\w.@+-]',
+                regex=r'^[\w.@+-]+\Z',
+                message='Username must be in the format: '
+                'litters,numbers, @, ., +, -,',
                 code=status.HTTP_400_BAD_REQUEST,
             )
         ],
