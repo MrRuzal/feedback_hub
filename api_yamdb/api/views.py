@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
 
 
-from reviews.models import Titles, Categories, Genres, User
+from reviews.models import Title, Categorie, Genre, User
 from api.serializers import (
     TitleSerializer,
     GenresSerializer,
@@ -17,17 +17,17 @@ from .serializers import TokenSerializer
 
 
 class TitleVewSet(viewsets.ModelViewSet):
-    queryset = Titles.objects.all()
+    queryset = Title.objects.all()
     serializer_class = TitleSerializer
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
-    queryset = Categories.objects.all()
+    queryset = Categorie.objects.all()
     serializer_class = CategoriesSerializer
 
 
 class GenresViewSet(viewsets.ModelViewSet):
-    queryset = Genres.objects.all()
+    queryset = Genre.objects.all()
     serializer_class = GenresSerializer
 
 

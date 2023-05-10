@@ -35,7 +35,7 @@ class User(AbstractUser):
     )
 
 
-class Categories(models.Model):
+class Categorie(models.Model):
     name = models.CharField(max_length=256, verbose_name='Название категории')
     slug = models.SlugField(
         max_length=50,
@@ -49,7 +49,7 @@ class Categories(models.Model):
     )
 
 
-class Genres(models.Model):
+class Genre(models.Model):
     name = models.CharField(max_length=256, verbose_name='Название жанра')
     slug = models.SlugField(
         max_length=50,
@@ -63,22 +63,22 @@ class Genres(models.Model):
     )
 
 
-class Titles(models.Model):
+class Title(models.Model):
     name = models.CharField(
         max_length=256,
         verbose_name='название',
     )
     year = models.IntegerField(verbose_name='год выпуска')
-    description = models.TextField(verbose_name='описание')
+    description = models.TextField(verbose_name='описание', blank=True)
     categories = models.ForeignKey(
-        Categories,
+        Categorie,
         related_name='title',
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
     )
     genres = models.ManyToManyField(
-        Genres,
+        Genre,
         through='GenreTitle',
         related_name='title',
         blank=True,
@@ -86,8 +86,8 @@ class Titles(models.Model):
 
 
 class GenreTitle(models.Model):
-    genre = models.ForeignKey(Genres, on_delete=models.CASCADE)
-    title = models.ForeignKey(Titles, on_delete=models.CASCADE)
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
 
     def str(self):
         return f'{self.title} {self.genre}'
