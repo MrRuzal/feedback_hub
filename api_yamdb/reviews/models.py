@@ -1,6 +1,8 @@
 from django.db import models
+from django.db.models import Avg
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import RegexValidator
+from django.core.validators import (RegexValidator,
+                                    MinLengthValidator, MaxLengthValidator)
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -81,4 +83,65 @@ class Titles(models.Model):
         Genres,
         related_name='title',
         on_delete=models.CASCADE
+    )
+
+
+class Review(models.Model):
+    title = models.ForeignKey(
+        Titles,
+        on_delete=models.CASCADE,
+        related_name='reviews'
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='reviews'
+    )
+    text = models.TextField()
+    pub_date = models.DateTimeField(
+        'Дата ревью',
+        auto_now_add=True,
+        db_index=True
+    )
+    rating = models.IntegerField('Рейтинг', default=0)
+    score = models.IntegerField(
+        'Оценка',
+        default=0,
+        validators=[
+            MinLengthValidator(1),
+            MaxLengthValidator(10)
+        ]
+    )
+
+    class Meta:
+        ordering = ['-pub_date']
+        constraints = [
+            models.UniqueConstraint(
+                name='unique_review',
+                fields=['author', 'title']
+            )
+        ]
+
+    def calculate_rating(self):
+        avg_rating = self.comments.aggregate(Avg('score'))['score__avg']
+        self.rating = round(avg_rating) if avg_rating is not None else 0
+        self.save()
+
+
+class Comment(models.Model):
+    review = models.ForeignKey(
+        Review,
+        on_delete=models.CASCADE,
+        related_name='comments'
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comments'
+    )
+    text = models.TextField()
+    pub_date = models.DateTimeField(
+        'Дата коммента',
+        auto_now_add=True,
+        db_index=True
     )
