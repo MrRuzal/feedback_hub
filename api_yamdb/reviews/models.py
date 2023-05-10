@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from rest_framework import status
-from rest_framework.response import Response
+from django.contrib.auth.models import User
 
 
 class User(AbstractUser):
@@ -15,8 +15,10 @@ class User(AbstractUser):
         unique=True,
         validators=[
             RegexValidator(
-                regex=r'^[\w.@+-]+\z',
-                code=Response(status=status.HTTP_400_BAD_REQUEST),
+                regex=r'^[\w.@+-]+\Z',
+                message='Username must be in the format: '
+                'litters,numbers, @, ., +, -,',
+                code=status.HTTP_400_BAD_REQUEST,
             )
         ],
     )
@@ -34,32 +36,23 @@ class User(AbstractUser):
 
 
 class Categories(models.Model):
-    name = models.CharField(
-        max_length=200,
-        verbose_name='Название категории'
-    )
+    name = models.CharField(max_length=200, verbose_name='Название категории')
     slug = models.SlugField(
         max_length=50,
         unique=True,
         validators=[
             RegexValidator(
                 regex=r'^[-a-zA-Z0-9_]+$',
-                code=Response(status=status.HTTP_400_BAD_REQUEST)
+                code=status.HTTP_400_BAD_REQUEST,
             )
-        ]
+        ],
     )
 
 
 class Genres(models.Model):
-    name = models.CharField(
-        max_length=200,
-        verbose_name='Название жанра'
-    )
+    name = models.CharField(max_length=200, verbose_name='Название жанра')
     slug = models.SlugField(
-        unique=True,
-        validators=[
-            RegexValidator(regex=r'^[-a-zA-Z0-9_]+$')
-        ]
+        unique=True, validators=[RegexValidator(regex=r'^[-a-zA-Z0-9_]+$')]
     )
 
 
@@ -69,16 +62,12 @@ class Titles(models.Model):
         verbose_name='Название произведения',
     )
     pub_date = models.IntegerField()
-    description = models.TextField(
-        verbose_name='Описание произведения'
-    )
+    description = models.TextField(verbose_name='Описание произведения')
     categories = models.ForeignKey(
         Categories,
         related_name='title',
         on_delete=models.CASCADE,
     )
     genres = models.ForeignKey(
-        Genres,
-        related_name='title',
-        on_delete=models.CASCADE
+        Genres, related_name='title', on_delete=models.CASCADE
     )
