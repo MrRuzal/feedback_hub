@@ -9,7 +9,6 @@ from reviews.models import (
     Review,
     Comment,
     User,
-    GenreTitle,
 )
 from api.validators import validate_username, validate_username_bad_sign
 
