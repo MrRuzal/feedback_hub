@@ -57,7 +57,7 @@ class User(AbstractUser):
     )
 
 
-class Categorie(models.Model):
+class Category(models.Model):
     name = models.CharField(max_length=256, verbose_name='Название категории')
     slug = models.SlugField(
         max_length=50,
@@ -90,16 +90,22 @@ class Title(models.Model):
         max_length=256,
         verbose_name='название',
     )
+    rating = models.IntegerField(
+        verbose_name='Рейтинг',
+        null=True,
+        default=None
+    )
+    count_review = models.IntegerField('Колличество оевью', default=0)
     year = models.IntegerField(verbose_name='год выпуска')
     description = models.TextField(verbose_name='описание', blank=True)
-    categories = models.ForeignKey(
-        Categorie,
+    category = models.ForeignKey(
+        Category,
         related_name='title',
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
     )
-    genres = models.ManyToManyField(
+    genre = models.ManyToManyField(
         Genre,
         through='GenreTitle',
         related_name='title',
@@ -118,7 +124,6 @@ class Review(models.Model):
     pub_date = models.DateTimeField(
         'Дата ревью', auto_now_add=True, db_index=True
     )
-    rating = models.IntegerField('Рейтинг', default=0)
     score = models.IntegerField(
         'Оценка',
         default=0,
