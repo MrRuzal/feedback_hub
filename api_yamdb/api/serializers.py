@@ -1,34 +1,58 @@
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
-from reviews.models import Titles, Categories, Genres, Review, Comment, User
-
-
-class TitleSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = '__all__'
-        model = Titles
+from reviews.models import (
+    Title,
+    Categorie,
+    Genre,
+    Review,
+    Comment,
+    User,
+    GenreTitle,
+)
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = '__all__'
-        model = Categories
+        fields = ('name', 'slug')
+        model = Categorie
 
 
 class GenresSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = '__all__'
-        model = Genres
+        fields = ('name', 'slug')
+        model = Genre
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    genres = GenresSerializer(read_only=True, many=True)
+    categories = SlugRelatedField(slug_field='slug', read_only=True)
+
+    class Meta:
+        fields = ('id', 'name', 'year', 'description', 'categories', 'genres')
+        model = Title
+
+    def create(self, validated_data):
+        is_exists_genres = False
+        if validated_data.get('genres'):
+            genres = validated_data.pop('genres')
+            is_exists_genres = True
+        title = Title.objects.create(**validated_data)
+        if is_exists_genres:
+            for genre in genres:
+                current_genre, status = Genre.objects.get_or_create(**genre)
+                GenreTitle.objects.create(genre=current_genre, title=title)
+        return title
 
 
 class ReviewSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Review (Ревью произведений).
     """
+
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True,
-        default=serializers.CurrentUserDefault()
+        default=serializers.CurrentUserDefault(),
     )
 
     class Meta:
@@ -62,6 +86,7 @@ class CommentSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Comment (Комментарии).
     """
+
     author = SlugRelatedField(slug_field='username', read_only=True)
 
     class Meta:
@@ -72,4 +97,3 @@ class CommentSerializer(serializers.ModelSerializer):
 class TokenSerializer(serializers.Serializer):
     username = serializers.CharField()
     confirmation_code = serializers.CharField()
-

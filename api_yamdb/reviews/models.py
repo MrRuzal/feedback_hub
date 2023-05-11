@@ -1,8 +1,11 @@
 from django.db import models
 from django.db.models import Avg
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import (RegexValidator,
-                                    MinLengthValidator, MaxLengthValidator)
+from django.core.validators import (
+    RegexValidator,
+    MinLengthValidator,
+    MaxLengthValidator,
+)
 from rest_framework import status
 from django.contrib.auth.models import User
 
@@ -37,7 +40,7 @@ class User(AbstractUser):
     )
 
 
-class Categories(models.Model):
+class Categorie(models.Model):
     name = models.CharField(max_length=256, verbose_name='Название категории')
     slug = models.SlugField(
         max_length=50,
@@ -51,7 +54,7 @@ class Categories(models.Model):
     )
 
 
-class Genres(models.Model):
+class Genre(models.Model):
     name = models.CharField(max_length=256, verbose_name='Название жанра')
     slug = models.SlugField(
         max_length=50,
@@ -65,62 +68,51 @@ class Genres(models.Model):
     )
 
 
-class Titles(models.Model):
+class Title(models.Model):
     name = models.CharField(
         max_length=256,
         verbose_name='название',
     )
     year = models.IntegerField(verbose_name='год выпуска')
-    description = models.TextField(verbose_name='описание')
+    description = models.TextField(verbose_name='описание', blank=True)
     categories = models.ForeignKey(
-        Categories,
+        Categorie,
         related_name='title',
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
     )
     genres = models.ManyToManyField(
-        Genres,
+        Genre,
         through='GenreTitle',
         related_name='title',
         blank=True,
     )
 
 
-
 class Review(models.Model):
     title = models.ForeignKey(
-        Titles,
-        on_delete=models.CASCADE,
-        related_name='reviews'
+        Title, on_delete=models.CASCADE, related_name='reviews'
     )
     author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='reviews'
+        User, on_delete=models.CASCADE, related_name='reviews'
     )
     text = models.TextField()
     pub_date = models.DateTimeField(
-        'Дата ревью',
-        auto_now_add=True,
-        db_index=True
+        'Дата ревью', auto_now_add=True, db_index=True
     )
     rating = models.IntegerField('Рейтинг', default=0)
     score = models.IntegerField(
         'Оценка',
         default=0,
-        validators=[
-            MinLengthValidator(1),
-            MaxLengthValidator(10)
-        ]
+        validators=[MinLengthValidator(1), MaxLengthValidator(10)],
     )
 
     class Meta:
         ordering = ['-pub_date']
         constraints = [
             models.UniqueConstraint(
-                name='unique_review',
-                fields=['author', 'title']
+                name='unique_review', fields=['author', 'title']
             )
         ]
 
@@ -132,27 +124,20 @@ class Review(models.Model):
 
 class Comment(models.Model):
     review = models.ForeignKey(
-        Review,
-        on_delete=models.CASCADE,
-        related_name='comments'
+        Review, on_delete=models.CASCADE, related_name='comments'
     )
     author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='comments'
+        User, on_delete=models.CASCADE, related_name='comments'
     )
     text = models.TextField()
     pub_date = models.DateTimeField(
-        'Дата коммента',
-        auto_now_add=True,
-        db_index=True
+        'Дата коммента', auto_now_add=True, db_index=True
     )
 
 
 class GenreTitle(models.Model):
-    genre = models.ForeignKey(Genres, on_delete=models.CASCADE)
-    title = models.ForeignKey(Titles, on_delete=models.CASCADE)
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
 
     def str(self):
         return f'{self.title} {self.genre}'
-
