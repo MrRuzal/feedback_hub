@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from reviews.models import (
     Title,
-    Categorie,
+    Category,
     Genre,
     Review,
     Comment,
@@ -14,7 +14,7 @@ from reviews.models import (
 class CategoriesSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('name', 'slug')
-        model = Categorie
+        model = Category
 
 
 class GenresSerializer(serializers.ModelSerializer):
@@ -24,24 +24,41 @@ class GenresSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    genres = GenresSerializer(read_only=True, many=True)
-    categories = SlugRelatedField(slug_field='slug', read_only=True)
+    genre = serializers.SlugRelatedField(
+        slug_field='slug', many=True, queryset=Genre.objects.all()
+    )
+    category = serializers.SlugRelatedField(
+        slug_field='slug', queryset=Category.objects.all()
+    )
 
     class Meta:
-        fields = ('id', 'name', 'year', 'description', 'categories', 'genres')
+        fields = (
+            'id',
+            'name',
+            'year',
+            'rating',
+            'description',
+            'category',
+            'genre',
+        )
         model = Title
 
-    def create(self, validated_data):
-        is_exists_genres = False
-        if validated_data.get('genres'):
-            genres = validated_data.pop('genres')
-            is_exists_genres = True
-        title = Title.objects.create(**validated_data)
-        if is_exists_genres:
-            for genre in genres:
-                current_genre, status = Genre.objects.get_or_create(**genre)
-                GenreTitle.objects.create(genre=current_genre, title=title)
-        return title
+
+class TitleListSerializer(serializers.ModelSerializer):
+    genre = GenresSerializer(read_only=True, many=True)
+    category = CategoriesSerializer(read_only=True)
+
+    class Meta:
+        fields = (
+            'id',
+            'name',
+            'year',
+            'rating',
+            'description',
+            'category',
+            'genre',
+        )
+        model = Title
 
 
 class ReviewSerializer(serializers.ModelSerializer):
