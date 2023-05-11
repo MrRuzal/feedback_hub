@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
+
 from reviews.models import Titles, Categories, Genres, Review, Comment, User
+from api.validators import validate_username, validate_username_bad_sign
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -22,6 +24,11 @@ class GenresSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        max_length=150,
+        validators=[validate_username_bad_sign],
+    )
+
     class Meta:
         fields = (
             'username',
@@ -35,6 +42,10 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserRoleSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        max_length=150,
+        validators=[validate_username_bad_sign],
+    )
     role = serializers.CharField(read_only=True)
 
     class Meta:
@@ -50,18 +61,35 @@ class UserRoleSerializer(serializers.ModelSerializer):
 
 
 class TokenSerializer(serializers.Serializer):
-    username = serializers.CharField(required=True)
+    username = serializers.CharField(
+        required=True,
+        max_length=150,
+    )
     confirmation_code = serializers.CharField(required=True)
 
 
-# class SignupSerializer(serializers.Serializer):
-#     username = serializers.CharField(required=True)
-#     email = serializers.CharField(required=True)
-
-
 class SignupSerializer(serializers.ModelSerializer):
-    fields = ('usename', 'email')
-    model = User
+    username = serializers.CharField(
+        required=True,
+        max_length=150,
+        validators=[validate_username_bad_sign, validate_username_bad_sign],
+    )
+    email = serializers.EmailField(max_length=254)
+
+    def create(self, validated_data):
+        try:
+            user = User.objects.get_or_create(
+                username=validated_data['username'],
+                email=validated_data['email'],
+            )
+
+        except KeyError as error:
+            raise serializers.ValidationError(f"Отсутствующий ключ {error}")
+        return user
+
+    class Meta:
+        fields = ('username', 'email')
+        model = User
 
 
 class ReviewSerializer(serializers.ModelSerializer):

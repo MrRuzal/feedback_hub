@@ -16,18 +16,13 @@ from api.serializers import (
     CategoriesSerializer,
     ReviewSerializer,
     CommentSerializer,
-)
-from reviews.models import Titles, Categories, Genres, User
-
-from api.serializers import (
-    TitleSerializer,
-    GenresSerializer,
-    CategoriesSerializer,
     UserSerializer,
     UserRoleSerializer,
     TokenSerializer,
     SignupSerializer,
 )
+
+from reviews.models import Titles, Categories, Genres, User
 from api.permissions import IsAdmin
 
 
