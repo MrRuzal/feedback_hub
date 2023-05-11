@@ -1,1 +1,3 @@
-kjgahewrioghwaeoifj
+Проект YaMDb (групповой проект).
+
+Описание
