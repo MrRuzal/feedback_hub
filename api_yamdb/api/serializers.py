@@ -1,26 +1,49 @@
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
-from reviews.models import Titles, Categories, Genres, Review, Comment, User
+from reviews.models import (
+    Title,
+    Categorie,
+    Genre,
+    Review,
+    Comment,
+    User,
+    GenreTitle,
+)
 from api.validators import validate_username, validate_username_bad_sign
-
-
-class TitleSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = '__all__'
-        model = Titles
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = '__all__'
-        model = Categories
+        fields = ('name', 'slug')
+        model = Categorie
 
 
 class GenresSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = '__all__'
-        model = Genres
+        fields = ('name', 'slug')
+        model = Genre
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    genres = GenresSerializer(read_only=True, many=True)
+    categories = SlugRelatedField(slug_field='slug', read_only=True)
+
+    class Meta:
+        fields = ('id', 'name', 'year', 'description', 'categories', 'genres')
+        model = Title
+
+    def create(self, validated_data):
+        is_exists_genres = False
+        if validated_data.get('genres'):
+            genres = validated_data.pop('genres')
+            is_exists_genres = True
+        title = Title.objects.create(**validated_data)
+        if is_exists_genres:
+            for genre in genres:
+                current_genre, status = Genre.objects.get_or_create(**genre)
+                GenreTitle.objects.create(genre=current_genre, title=title)
+        return title
 
 
 class UserSerializer(serializers.ModelSerializer):
