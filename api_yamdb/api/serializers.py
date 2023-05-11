@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
+from django.db import IntegrityError
 
 from reviews.models import (
     Title,
@@ -11,6 +12,8 @@ from reviews.models import (
     GenreTitle,
 )
 from api.validators import validate_username, validate_username_bad_sign
+
+USER_FIELDS = ['username', 'email', 'bio', 'role', 'first_name', 'last_name']
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -47,40 +50,16 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(
-        max_length=150,
-        validators=[validate_username_bad_sign],
-    )
-
     class Meta:
-        fields = (
-            'username',
-            'email',
-            'first_name',
-            'last_name',
-            'bio',
-            'role',
-        )
+        fields = USER_FIELDS
         model = User
 
 
 class UserRoleSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(
-        max_length=150,
-        validators=[validate_username_bad_sign],
-    )
-    role = serializers.CharField(read_only=True)
-
     class Meta:
-        fields = (
-            'username',
-            'email',
-            'first_name',
-            'last_name',
-            'bio',
-            'role',
-        )
+        fields = USER_FIELDS
         model = User
+        read_only_fields = ['role']
 
 
 class TokenSerializer(serializers.Serializer):
@@ -95,19 +74,17 @@ class SignupSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         required=True,
         max_length=150,
-        validators=[validate_username_bad_sign, validate_username_bad_sign],
+        validators=[validate_username, validate_username_bad_sign],
     )
-    email = serializers.EmailField(max_length=254)
+    email = serializers.EmailField(
+        max_length=254,
+    )
 
     def create(self, validated_data):
         try:
-            user = User.objects.get_or_create(
-                username=validated_data['username'],
-                email=validated_data['email'],
-            )
-
-        except KeyError as error:
-            raise serializers.ValidationError(f"Отсутствующий ключ {error}")
+            user = User.objects.get_or_create(**validated_data)[0]
+        except IntegrityError:
+            raise serializers.ValidationError('Такая запись уже существует')
         return user
 
     class Meta:

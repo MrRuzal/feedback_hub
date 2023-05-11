@@ -8,6 +8,7 @@ from django.core.validators import (
 )
 from rest_framework import status
 from django.contrib.auth.models import User
+from api.validators import validate_username
 
 
 class User(AbstractUser):
@@ -16,7 +17,7 @@ class User(AbstractUser):
         MODERATOR = 'moderator', 'модератор'
         ADMIN = 'admin', 'администратор'
 
-    username = models.TextField(
+    username = models.CharField(
         max_length=150,
         unique=True,
         validators=[
@@ -25,7 +26,8 @@ class User(AbstractUser):
                 message='150 characters or fewer. '
                 'Letters, digits and @/./+/-/_ only',
                 code=status.HTTP_400_BAD_REQUEST,
-            )
+            ),
+            validate_username,
         ],
     )
     email = models.EmailField(
@@ -52,12 +54,6 @@ class User(AbstractUser):
         choices=Role.choices,
         default=Role.USER,
         verbose_name='Роли',
-    )
-    confirmation_code = models.CharField(
-        max_length=150,
-        null=True,
-        blank=False,
-        verbose_name='Код подтверждения',
     )
 
 
