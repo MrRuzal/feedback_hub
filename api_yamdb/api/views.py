@@ -86,6 +86,7 @@ class ListCreateDeletMixin(
 ):
     ...
 
+
 class CategoriesViewSet(ListCreateDeletMixin):
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
@@ -117,7 +118,7 @@ class ReviewVeiewSet(viewsets.ModelViewSet):
         title = Title.objects.get(id=title_id)
         score = serializer.score
         rating = title.rating
-        if rating != None:
+        if rating is not None:
             count_review = title.count_review
             sum_score = rating * count_review
             new_rating = (score + sum_score) / (count_review + 1)
