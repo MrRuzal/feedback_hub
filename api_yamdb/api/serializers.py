@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
+from django.db import IntegrityError
+
 from reviews.models import (
     Title,
     Categorie,
@@ -9,6 +11,9 @@ from reviews.models import (
     User,
     GenreTitle,
 )
+from api.validators import validate_username, validate_username_bad_sign
+
+USER_FIELDS = ['username', 'email', 'bio', 'role', 'first_name', 'last_name']
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -42,6 +47,49 @@ class TitleSerializer(serializers.ModelSerializer):
                 current_genre, status = Genre.objects.get_or_create(**genre)
                 GenreTitle.objects.create(genre=current_genre, title=title)
         return title
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = USER_FIELDS
+        model = User
+
+
+class UserRoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = USER_FIELDS
+        model = User
+        read_only_fields = ['role']
+
+
+class TokenSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        required=True,
+        max_length=150,
+    )
+    confirmation_code = serializers.CharField(required=True)
+
+
+class SignupSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        required=True,
+        max_length=150,
+        validators=[validate_username, validate_username_bad_sign],
+    )
+    email = serializers.EmailField(
+        max_length=254,
+    )
+
+    def create(self, validated_data):
+        try:
+            user = User.objects.get_or_create(**validated_data)[0]
+        except IntegrityError:
+            raise serializers.ValidationError('Такая запись уже существует')
+        return user
+
+    class Meta:
+        fields = ('username', 'email')
+        model = User
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -92,8 +140,3 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'text', 'author', 'pub_date')
         model = Comment
-
-
-class TokenSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    confirmation_code = serializers.CharField()
