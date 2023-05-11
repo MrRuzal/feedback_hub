@@ -60,8 +60,8 @@ class TitleListSerializer(serializers.ModelSerializer):
             'year',
             'rating',
             'description',
-            'category',
             'genre',
+            'category',
         )
         model = Title
 
