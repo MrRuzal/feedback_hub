@@ -1,34 +1,106 @@
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
-from reviews.models import Titles, Categories, Genres, Review, Comment
+from django.db import IntegrityError
+
+from reviews.models import (
+    Title,
+    Categorie,
+    Genre,
+    Review,
+    Comment,
+    User,
+    GenreTitle,
+)
+from api.validators import validate_username, validate_username_bad_sign
+
+USER_FIELDS = ['username', 'email', 'bio', 'role', 'first_name', 'last_name']
 
 
-class TitleSerializer(serializers.ModelSerializers):
+class CategoriesSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = '__all__'
-        model = Titles
+        fields = ('name', 'slug')
+        model = Categorie
 
 
-class CategoriesSerializer(serializers.ModelSerializers):
+class GenresSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = '__all__'
-        model = Categories
+        fields = ('name', 'slug')
+        model = Genre
 
 
-class GenresSerializer(serializers.ModelSerializers):
+class TitleSerializer(serializers.ModelSerializer):
+    genres = GenresSerializer(read_only=True, many=True)
+    categories = SlugRelatedField(slug_field='slug', read_only=True)
+
     class Meta:
-        fields = '__all__'
-        model = Genres
+        fields = ('id', 'name', 'year', 'description', 'categories', 'genres')
+        model = Title
+
+    def create(self, validated_data):
+        is_exists_genres = False
+        if validated_data.get('genres'):
+            genres = validated_data.pop('genres')
+            is_exists_genres = True
+        title = Title.objects.create(**validated_data)
+        if is_exists_genres:
+            for genre in genres:
+                current_genre, status = Genre.objects.get_or_create(**genre)
+                GenreTitle.objects.create(genre=current_genre, title=title)
+        return title
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = USER_FIELDS
+        model = User
+
+
+class UserRoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = USER_FIELDS
+        model = User
+        read_only_fields = ['role']
+
+
+class TokenSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        required=True,
+        max_length=150,
+    )
+    confirmation_code = serializers.CharField(required=True)
+
+
+class SignupSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        required=True,
+        max_length=150,
+        validators=[validate_username, validate_username_bad_sign],
+    )
+    email = serializers.EmailField(
+        max_length=254,
+    )
+
+    def create(self, validated_data):
+        try:
+            user = User.objects.get_or_create(**validated_data)[0]
+        except IntegrityError:
+            raise serializers.ValidationError('Такая запись уже существует')
+        return user
+
+    class Meta:
+        fields = ('username', 'email')
+        model = User
 
 
 class ReviewSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Review (Ревью произведений).
     """
+
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True,
-        default=serializers.CurrentUserDefault()
+        default=serializers.CurrentUserDefault(),
     )
 
     class Meta:
@@ -62,6 +134,7 @@ class CommentSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Comment (Комментарии).
     """
+
     author = SlugRelatedField(slug_field='username', read_only=True)
 
     class Meta:

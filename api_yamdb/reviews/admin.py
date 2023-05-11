@@ -5,3 +5,7 @@ from .models import User, Review, Comment
 admin.site.register(User)
 admin.site.register(Review)
 admin.site.register(Comment)
+
+
+class BaseAdmin(admin.ModelAdmin):
+    empty_value_display = '-пусто-'
