@@ -12,7 +12,6 @@ from .views import (
     CommentViewSet,
 )
 
-
 router_v1 = DefaultRouter()
 router_v1.register('titles', TitleVewSet)
 router_v1.register('categories', CategoriesViewSet)
