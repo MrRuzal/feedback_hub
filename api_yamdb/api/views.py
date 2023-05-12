@@ -1,18 +1,23 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
-
+from rest_framework import viewsets, mixins
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import (
+    AllowAny,
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.decorators import action
 from rest_framework.serializers import ValidationError
 from rest_framework.filters import SearchFilter
+from api.filters import TitleFilter
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 from api.serializers import (
@@ -25,10 +30,15 @@ from api.serializers import (
     UserRoleSerializer,
     TokenSerializer,
     SignupSerializer,
+    TitleListSerializer,
 )
 
-from reviews.models import Title, Categorie, Genre, User
-from api.permissions import IsAdmin, IsAdminAuthorModeratorOrReadOnly
+from reviews.models import Title, Category, Genre, User
+from api.permissions import (
+    IsAdmin,
+    IsAdminAuthorModeratorOrReadOnly,
+    IsAdminOrReadOnly,
+)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -62,17 +72,41 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class TitleVewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
+    permission_classes = (IsAdminAuthorModeratorOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
+
+    def get_serializer_class(self):
+        if self.request.method in ('POST', 'PATCH'):
+            return TitleSerializer
+        return TitleListSerializer
 
 
-class CategoriesViewSet(viewsets.ModelViewSet):
-    queryset = Categorie.objects.all()
+class ListCreateDeletMixin(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    ...
+
+
+class CategoriesViewSet(ListCreateDeletMixin):
+    queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
+    lookup_field = 'slug'
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
 
 
-class GenresViewSet(viewsets.ModelViewSet):
+class GenresViewSet(ListCreateDeletMixin):
     queryset = Genre.objects.all()
     serializer_class = GenresSerializer
+    lookup_field = 'slug'
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
 
 
 class ReviewVeiewSet(viewsets.ModelViewSet):
@@ -80,14 +114,39 @@ class ReviewVeiewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminAuthorModeratorOrReadOnly]
 
     def get_queryset(self):
-        title_id = self.kwargs.get('title_id')
-        title = get_object_or_404(Title, id=title_id)
-        return title.reviews.all()
+        title = self.kwargs['title_id']
+        return super().get_queryset().filter(title=title)
 
     def perform_create(self, serializer):
-        title_id = self.kwargs.get('title_id')
-        title = get_object_or_404(Title, id=title_id)
+        title_id = self.kwargs['title_id']
+        title = Title.objects.get(id=title_id)
         serializer.save(author=self.request.user, title=title)
+
+    def create(self, request, *args, **kwargs):
+        title_id = self.kwargs['title_id']
+        title = get_object_or_404(Title, id=title_id)
+        score = request.data.get('score')
+        if score is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        else:
+            score = int(score)
+        rating = title.rating
+        if rating is not None:
+            count_review = title.count_review
+            sum_score = title.sum_score
+            data = {
+                'count_review': count_review + 1,
+                'sum_score': sum_score + score,
+            }
+        else:
+            data = {
+                'count_review': 1,
+                'sum_score': score,
+            }
+        title_serializer = TitleSerializer(title, data=data, partial=True)
+        if title_serializer.is_valid():
+            title_serializer.save()
+        return super().create(request, *args, **kwargs)
 
 
 class CommentViewSet(viewsets.ModelViewSet):

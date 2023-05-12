@@ -1,10 +1,16 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import (CategoriesViewSet, GenresViewSet, TitleVewSet,
-                    UserViewSet, CommentViewSet, ReviewVeiewSet,
-                    TokenView, SignupView)
-
+from .views import (
+    CategoriesViewSet,
+    GenresViewSet,
+    TitleVewSet,
+    UserViewSet,
+    TokenView,
+    SignupView,
+    ReviewVeiewSet,
+    CommentViewSet,
+)
 
 router_v1 = DefaultRouter()
 router_v1.register('titles', TitleVewSet)
@@ -17,6 +23,14 @@ router_v1.register(
     CommentViewSet, basename='commments')
 
 router_v1.register('users', UserViewSet)
+router_v1.register(
+    'titles/(?P<title_id>[^/.]+)/reviews', ReviewVeiewSet, basename='reviews'
+)
+router_v1.register(
+    'titles/(?P<title_id>[^/.]+)/reviews/(?P<review_id>[^/.]+)/comments',
+    CommentViewSet,
+    basename='comments',
+)
 
 urlpatterns = [
     path('v1/', include(router_v1.urls)),
