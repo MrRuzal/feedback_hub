@@ -138,11 +138,11 @@ class ReviewSerializer(serializers.ModelSerializer):
         request = self.context['request']
         if request.method == 'POST':
             title_id = request.parser_context['kwargs'].get('title_id')
-        user = request.user
-        if user.reviews.filter(title_id=title_id).exists():
-            raise serializers.ValidationError(
-                'Нельзя оставить отзыв на одно произведение дважды'
-            )
+            user = request.user
+            if user.reviews.filter(title_id=title_id).exists():
+                raise serializers.ValidationError(
+                    'Нельзя оставить отзыв на одно произведение дважды'
+                )
         return attrs
 
 

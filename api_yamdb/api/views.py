@@ -72,7 +72,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class TitleVewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    permission_classes = (IsAdminAuthorModeratorOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
 
@@ -114,8 +114,9 @@ class ReviewVeiewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminAuthorModeratorOrReadOnly]
 
     def get_queryset(self):
-        title = self.kwargs['title_id']
-        return super().get_queryset().filter(title=title)
+        title_id = self.kwargs.get('title_id')
+        title = get_object_or_404(Title, id=title_id)
+        return title.reviews.all()
 
     def perform_create(self, serializer):
         title_id = self.kwargs['title_id']
