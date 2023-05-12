@@ -1,10 +1,9 @@
 from django.db import models
-from django.db.models import Avg
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import (
     RegexValidator,
-    MinLengthValidator,
-    MaxLengthValidator,
+    MinValueValidator,
+    MaxValueValidator,
 )
 from rest_framework import status
 from django.contrib.auth.models import User
@@ -91,11 +90,10 @@ class Title(models.Model):
         verbose_name='название',
     )
     rating = models.IntegerField(
-        verbose_name='Рейтинг',
-        null=True,
-        default=None
+        verbose_name='Рейтинг', null=True, default=None
     )
     count_review = models.IntegerField('Колличество оевью', default=0)
+    sum_score = models.IntegerField('Сумма оценок ревью', default=0)
     year = models.IntegerField(verbose_name='год выпуска')
     description = models.TextField(verbose_name='описание', blank=True)
     category = models.ForeignKey(
@@ -127,7 +125,7 @@ class Review(models.Model):
     score = models.IntegerField(
         'Оценка',
         default=0,
-        validators=[MinLengthValidator(1), MaxLengthValidator(10)],
+        validators=[MaxValueValidator(10), MinValueValidator(1)],
     )
 
     class Meta:
@@ -137,11 +135,6 @@ class Review(models.Model):
                 name='unique_review', fields=['author', 'title']
             )
         ]
-
-    def calculate_rating(self):
-        avg_rating = self.comments.aggregate(Avg('score'))['score__avg']
-        self.rating = round(avg_rating) if avg_rating is not None else 0
-        self.save()
 
 
 class Comment(models.Model):

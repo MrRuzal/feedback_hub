@@ -6,7 +6,11 @@ from django.contrib.auth.tokens import default_token_generator
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import (
+    AllowAny,
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.decorators import action
@@ -108,27 +112,42 @@ class GenresViewSet(ListCreateDeletMixin):
 class ReviewVeiewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     queryset = Review.objects.all()
+    permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
         title = self.kwargs['title_id']
-        return super().get_queryset.filter(title=title)
+        return super().get_queryset().filter(title=title)
 
     def perform_create(self, serializer):
         title_id = self.kwargs['title_id']
         title = Title.objects.get(id=title_id)
-        score = serializer.score
+        serializer.save(author=self.request.user, title=title)
+
+    def create(self, request, *args, **kwargs):
+        title_id = self.kwargs['title_id']
+        title = get_object_or_404(Title, id=title_id)
+        score = request.data.get('score')
+        if score is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        else:
+            score = int(score)
         rating = title.rating
         if rating is not None:
             count_review = title.count_review
-            sum_score = rating * count_review
-            new_rating = (score + sum_score) / (count_review + 1)
-            data = {'count_review': count_review + 1, 'rating': new_rating}
+            sum_score = title.sum_score
+            data = {
+                'count_review': count_review + 1,
+                'sum_score': sum_score + score,
+            }
         else:
-            data = {'count_review': 1, 'rating': score}
+            data = {
+                'count_review': 1,
+                'sum_score': score,
+            }
         title_serializer = TitleSerializer(title, data=data, partial=True)
         if title_serializer.is_valid():
             title_serializer.save()
-        serializer.save(author=self.request.user, title=title)
+        return super().create(request, *args, **kwargs)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
