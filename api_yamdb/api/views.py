@@ -27,7 +27,7 @@ from api.serializers import (
     SignupSerializer,
 )
 
-from reviews.models import Title, Categorie, Genre, User, Review, Comment
+from reviews.models import Title, Categorie, Genre, User
 from api.permissions import IsAdmin, IsAdminAuthorModeratorOrReadOnly
 
 

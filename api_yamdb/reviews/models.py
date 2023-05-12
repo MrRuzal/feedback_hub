@@ -3,8 +3,8 @@ from django.db.models import Avg
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import (
     RegexValidator,
-    MinLengthValidator,
-    MaxLengthValidator,
+    MinValueValidator,
+    MaxValueValidator,
 )
 from rest_framework import status
 from django.contrib.auth.models import User
@@ -122,7 +122,7 @@ class Review(models.Model):
     score = models.IntegerField(
         'Оценка',
         default=0,
-        validators=[MinLengthValidator(1), MaxLengthValidator(10)],
+        validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
 
     class Meta:
