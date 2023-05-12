@@ -1,12 +1,12 @@
-from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, User
 from django.core.validators import (
-    RegexValidator,
-    MinValueValidator,
     MaxValueValidator,
+    MinValueValidator,
+    RegexValidator,
 )
+from django.db import models
 from rest_framework import status
-from django.contrib.auth.models import User
+
 from api.validators import validate_username
 
 
@@ -125,7 +125,7 @@ class Title(models.Model):
     class Meta:
         verbose_name = 'Произведения'
         verbose_name_plural = 'Произведении'
-        ordering = ('name',)
+        ordering = ('year',)
 
 
 class Review(models.Model):
@@ -171,7 +171,7 @@ class Comment(models.Model):
     class Meta:
         verbose_name = 'Коментария'
         verbose_name_plural = 'Коментарии'
-        ordering = ('review',)
+        ordering = ('-pub_date',)
 
 
 class GenreTitle(models.Model):
