@@ -89,7 +89,7 @@ class Title(models.Model):
         max_length=256,
         verbose_name='название',
     )
-    rating = models.FloatField(
+    rating = models.IntegerField(
         verbose_name='Рейтинг', null=True, default=None
     )
     count_review = models.IntegerField('Колличество оевью', default=0)

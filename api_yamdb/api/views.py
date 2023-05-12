@@ -9,7 +9,6 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import (
     AllowAny,
     IsAuthenticated,
-    IsAuthenticatedOrReadOnly,
 )
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
@@ -131,22 +130,30 @@ class ReviewVeiewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         else:
             score = int(score)
+
         rating = title.rating
+        count_review = title.count_review
+        sum_score = title.sum_score
+
         if rating is not None:
-            count_review = title.count_review
-            sum_score = title.sum_score
-            data = {
-                'count_review': count_review + 1,
-                'sum_score': sum_score + score,
-            }
+            count_review += 1
+            sum_score += score
         else:
-            data = {
-                'count_review': 1,
-                'sum_score': score,
-            }
+            count_review = 1
+            sum_score = score
+
+        rating = sum_score // count_review
+
+        data = {
+            'count_review': count_review,
+            'sum_score': sum_score,
+            'rating': rating,
+        }
+
         title_serializer = TitleSerializer(title, data=data, partial=True)
         if title_serializer.is_valid():
             title_serializer.save()
+
         return super().create(request, *args, **kwargs)
 
 

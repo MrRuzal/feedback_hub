@@ -23,14 +23,14 @@ router_v1.register(
     CommentViewSet, basename='commments')
 
 router_v1.register('users', UserViewSet)
-router_v1.register(
-    'titles/(?P<title_id>[^/.]+)/reviews', ReviewVeiewSet, basename='reviews'
-)
-router_v1.register(
-    'titles/(?P<title_id>[^/.]+)/reviews/(?P<review_id>[^/.]+)/comments',
-    CommentViewSet,
-    basename='comments',
-)
+# router_v1.register(
+#     'titles/(?P<title_id>[^/.]+)/reviews', ReviewVeiewSet, basename='reviews'
+# )
+# router_v1.register(
+#     'titles/(?P<title_id>[^/.]+)/reviews/(?P<review_id>[^/.]+)/comments',
+#     CommentViewSet,
+#     basename='comments',
+# )
 
 urlpatterns = [
     path('v1/', include(router_v1.urls)),
