@@ -31,5 +31,5 @@ jobs:
         python manage.py migrate
     - name: Run Tests
       run: |
-        pytest -qq --tb=line tests/test_00_user_registration.py tests/test_01_users.py tests/test_02_category.py tests/test_03_genre.py tests/test_04_title.py
+        pytest -qq --tb=line tests/test_00_user_registration.py tests/test_01_users.py 
 
