@@ -33,7 +33,7 @@ from api.serializers import (
     TitleListSerializer,
 )
 
-from reviews.models import Title, Category, Genre, User, Review, Comment
+from reviews.models import Title, Category, Genre, User
 from api.permissions import (
     IsAdmin,
     IsAdminAuthorModeratorOrReadOnly,
@@ -72,7 +72,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class TitleVewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    permission_classes = (IsAdminAuthorModeratorOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
 
@@ -111,12 +111,12 @@ class GenresViewSet(ListCreateDeletMixin):
 
 class ReviewVeiewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    queryset = Review.objects.all()
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = [IsAdminAuthorModeratorOrReadOnly]
 
     def get_queryset(self):
-        title = self.kwargs['title_id']
-        return super().get_queryset().filter(title=title)
+        title_id = self.kwargs.get('title_id')
+        title = get_object_or_404(Title, id=title_id)
+        return title.reviews.all()
 
     def perform_create(self, serializer):
         title_id = self.kwargs['title_id']
@@ -152,6 +152,7 @@ class ReviewVeiewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
+    permission_classes = [IsAdminAuthorModeratorOrReadOnly]
 
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
