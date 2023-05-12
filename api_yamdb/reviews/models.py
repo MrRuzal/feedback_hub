@@ -125,7 +125,7 @@ class Title(models.Model):
     class Meta:
         verbose_name = 'Произведения'
         verbose_name_plural = 'Произведении'
-        ordering = ('name',)
+        ordering = ('-year',)
 
 
 class Review(models.Model):
@@ -171,12 +171,12 @@ class Comment(models.Model):
     class Meta:
         verbose_name = 'Коментария'
         verbose_name_plural = 'Коментарии'
-        ordering = ('review',)
+        ordering = ('-pub_date',)
 
 
 class GenreTitle(models.Model):
-    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
-    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+    title_id = models.ForeignKey(Title, on_delete=models.CASCADE)
+    genre_id = models.ForeignKey(Genre, on_delete=models.CASCADE)
 
     def str(self):
         return f'{self.title} {self.genre}'
