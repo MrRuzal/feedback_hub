@@ -7,7 +7,7 @@ from django.core.validators import (
 from django.db import models
 from rest_framework import status
 
-from api.validators import validate_username
+from api.validators import validate_username, validet_year
 
 
 class User(AbstractUser):
@@ -106,7 +106,9 @@ class Title(models.Model):
     )
     count_review = models.IntegerField('Колличество ревью', default=0)
     sum_score = models.IntegerField('Сумма оценок ревью', default=0)
-    year = models.IntegerField(verbose_name='Год выпуска')
+    year = models.IntegerField(
+        validators=(validet_year,), verbose_name='Год выпуска'
+    )
     description = models.TextField(verbose_name='Описание', blank=True)
     category = models.ForeignKey(
         Category,
@@ -125,7 +127,7 @@ class Title(models.Model):
     class Meta:
         verbose_name = 'Произведения'
         verbose_name_plural = 'Произведении'
-        ordering = ('year',)
+        ordering = ('name',)
 
 
 class Review(models.Model):
