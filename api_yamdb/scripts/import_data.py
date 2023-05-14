@@ -1,13 +1,16 @@
 import csv
-from io import TextIOWrapper
 import os
+from api_yamdb.settings import BASE_DIR
 
-from django.core.management.base import BaseCommand
-from django.contrib.auth import get_user_model
-
-from reviews.models import Category, Comment, Genre, Review, Title
-
-User = get_user_model()
+from reviews.models import (
+    Category,
+    Comment,
+    Genre,
+    Review,
+    Title,
+    GenreTitle,
+    User,
+)
 
 
 def run():

@@ -7,7 +7,7 @@ from django.core.validators import (
 from django.db import models
 from rest_framework import status
 
-from api.validators import validate_username, validet_year
+from reviews.validators import validet_year, validate_username
 
 
 class User(AbstractUser):

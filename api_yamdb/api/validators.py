@@ -1,7 +1,6 @@
 import re
 
 from rest_framework.serializers import ValidationError
-from django.utils import timezone
 
 
 def validate_username(value):
@@ -18,8 +17,3 @@ def validate_username_bad_sign(value):
             "Имя пользователя содержит" "недопустимые символы"
         )
     return value
-
-
-def validet_year(year):
-    if year > timezone.now().year:
-        raise ValidationError('Такого года быть не может')
