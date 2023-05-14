@@ -5,8 +5,6 @@ from rest_framework.relations import SlugRelatedField
 from api.validators import validate_username, validate_username_bad_sign
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
-USER_FIELDS = ['username', 'email', 'bio', 'role', 'first_name', 'last_name']
-
 
 class CategoriesSerializer(serializers.ModelSerializer):
     class Meta:
@@ -48,14 +46,19 @@ class TitleListSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = USER_FIELDS
+        fields = (
+            'username',
+            'email',
+            'bio',
+            'role',
+            'first_name',
+            'last_name',
+        )
         model = User
 
 
-class UserRoleSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = USER_FIELDS
-        model = User
+class UserRoleSerializer(UserSerializer):
+    class Meta(UserSerializer.Meta):
         read_only_fields = ['role']
 
 

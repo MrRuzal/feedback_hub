@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractUser, User
+from django.contrib.auth.models import AbstractUser
 from django.core.validators import (
     MaxValueValidator,
     MinValueValidator,
@@ -9,38 +9,41 @@ from rest_framework import status
 
 from api.validators import validate_username, validet_year
 
+MAX_CHAR_LENGTH = 150
+MAX_EMAIL_LENGTH = 254
+
+
+class Role(models.TextChoices):
+    USER = 'user', 'пользователь'
+    MODERATOR = 'moderator', 'модератор'
+    ADMIN = 'admin', 'администратор'
+
+    @property
+    def value_length(cls):
+        return len(max(cls.values, key=len))
+
 
 class User(AbstractUser):
-    class Role(models.TextChoices):
-        USER = 'user', 'пользователь'
-        MODERATOR = 'moderator', 'модератор'
-        ADMIN = 'admin', 'администратор'
-
     username = models.CharField(
-        max_length=150,
+        max_length=MAX_CHAR_LENGTH,
         unique=True,
         validators=[
-            RegexValidator(
-                regex=r'^[\w.@+-]+\Z',
-                message='150 characters or fewer. '
-                'Letters, digits and @/./+/-/_ only',
-                code=status.HTTP_400_BAD_REQUEST,
-            ),
+            RegexValidator(r'^(?!me$|ME$)[\w.@+-]+\Z'),
             validate_username,
         ],
     )
     email = models.EmailField(
-        max_length=254,
+        max_length=MAX_EMAIL_LENGTH,
         unique=True,
         blank=False,
     )
     first_name = models.CharField(
-        max_length=150,
+        max_length=MAX_CHAR_LENGTH,
         blank=True,
         verbose_name='Имя',
     )
     last_name = models.CharField(
-        max_length=150,
+        max_length=MAX_CHAR_LENGTH,
         blank=True,
         verbose_name='Фамилия',
     )
@@ -49,20 +52,23 @@ class User(AbstractUser):
         verbose_name='Биография',
     )
     role = models.CharField(
-        max_length=10,
+        max_length=Role.value_length,
         choices=Role.choices,
         default=Role.USER,
         verbose_name='Роли',
     )
 
-    def if_user(self):
-        return self.role == 'user'
+    @property
+    def is_user(self):
+        return self.role == Role.USER
 
+    @property
     def is_admin(self):
-        return self.role == 'admin'
+        return self.role == Role.ADMIN
 
+    @property
     def is_moredator(self):
-        return self.role == 'moderator'
+        return self.role == Role.MODERATOR
 
     class Meta:
         verbose_name = 'Пользователь'
