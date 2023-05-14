@@ -55,6 +55,15 @@ class User(AbstractUser):
         verbose_name='Роли',
     )
 
+    def if_user(self):
+        return self.role == 'user'
+
+    def is_admin(self):
+        return self.role == 'admin'
+
+    def is_moredator(self):
+        return self.role == 'moderator'
+
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
