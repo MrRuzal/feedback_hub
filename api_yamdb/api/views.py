@@ -106,8 +106,9 @@ class ReviewVeiewSet(viewsets.ModelViewSet):
 
     def get_title(self):
         if not hasattr(self, 'title'):
-            self.title = get_object_or_404(Title,
-                                           pk=self.kwargs.get('title_id'))
+            self.title = get_object_or_404(
+                Title, pk=self.kwargs.get('title_id')
+            )
         return self.title
 
     def get_queryset(self):
