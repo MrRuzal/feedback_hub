@@ -1,16 +1,9 @@
+from django.db import IntegrityError
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
-from django.db import IntegrityError
 
-from reviews.models import (
-    Title,
-    Category,
-    Genre,
-    Review,
-    Comment,
-    User,
-)
 from api.validators import validate_username, validate_username_bad_sign
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
 USER_FIELDS = ['username', 'email', 'bio', 'role', 'first_name', 'last_name']
 
@@ -38,6 +31,9 @@ class TitleSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Title
+
+    def to_representation(self, instance):
+        return TitleListSerializer(instance).data
 
 
 class TitleListSerializer(serializers.ModelSerializer):
