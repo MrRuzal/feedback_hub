@@ -155,6 +155,9 @@ class Review(models.Model):
             )
         ]
 
+    def __str__(self):
+        return f'{self.author.username} {self.title}'
+
 
 class Comment(models.Model):
     review = models.ForeignKey(
@@ -172,6 +175,9 @@ class Comment(models.Model):
         verbose_name = 'Коментария'
         verbose_name_plural = 'Коментарии'
         ordering = ('review',)
+
+    def __str__(self):
+        return f'{self.author.username} {self.review}'
 
 
 class GenreTitle(models.Model):
