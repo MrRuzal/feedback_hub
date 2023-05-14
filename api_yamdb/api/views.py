@@ -73,9 +73,9 @@ class TitleVewSet(viewsets.ModelViewSet):
     filterset_class = TitleFilter
 
     def get_serializer_class(self):
-        if self.request.method in ('POST', 'PATCH'):
-            return TitleSerializer
-        return TitleListSerializer
+        if self.request.method == 'GET':
+            return TitleListSerializer
+        return TitleSerializer
 
 
 class ListCreateDeletMixin(

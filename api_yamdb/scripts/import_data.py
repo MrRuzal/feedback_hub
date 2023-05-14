@@ -44,3 +44,4 @@ def run():
                     value = row.pop(key)
                     row[f'{key}_id'] = value
             model.objects.create(**row)
+    print('Successfull!!! Import finished.')
