@@ -106,13 +106,14 @@ class ReviewVeiewSet(viewsets.ModelViewSet):
 
     def get_title(self):
         if not hasattr(self, 'title'):
-            self.title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+            self.title = get_object_or_404(Title,
+                                           pk=self.kwargs.get('title_id'))
         return self.title
 
     def get_queryset(self):
         title = self.get_title()
         return title.reviews.all().order_by('-pub_date')
-        
+
     def perform_create(self, serializer):
         title = self.get_title()
         serializer.save(author=self.request.user, title=title)
