@@ -69,6 +69,9 @@ class User(AbstractUser):
         verbose_name_plural = 'Пользователи'
         ordering = ('username',)
 
+    def __str__(self):
+        return self.username
+
 
 class NameAndSlugAbstarct(models.Model):
     name = models.CharField(max_length=256, verbose_name='Название')
@@ -80,6 +83,9 @@ class NameAndSlugAbstarct(models.Model):
     class Meta:
         abstract = True
 
+    def __str__(self):
+        return self.name
+
 
 class Category(NameAndSlugAbstarct):
     class Meta:
@@ -87,12 +93,18 @@ class Category(NameAndSlugAbstarct):
         verbose_name_plural = 'Категории'
         ordering = ('name',)
 
+    def __str__(self):
+        return self.name
+
 
 class Genre(NameAndSlugAbstarct):
     class Meta:
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
         ordering = ('name',)
+
+    def __str__(self):
+        return self.name
 
 
 class Title(models.Model):
@@ -122,6 +134,9 @@ class Title(models.Model):
         verbose_name = 'Произведения'
         verbose_name_plural = 'Произведении'
         ordering = ('name',)
+
+    def __str__(self):
+        return self.name
 
 
 class AbstractReviewComment(models.Model):
@@ -180,5 +195,5 @@ class GenreTitle(models.Model):
     title_id = models.ForeignKey(Title, on_delete=models.CASCADE)
     genre_id = models.ForeignKey(Genre, on_delete=models.CASCADE)
 
-    def str(self):
+    def __str__(self):
         return f'{self.title} {self.genre}'
