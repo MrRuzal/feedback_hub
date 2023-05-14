@@ -2,7 +2,6 @@ import csv
 import os
 from api_yamdb.settings import BASE_DIR
 
-
 from reviews.models import (
     Category,
     Comment,
@@ -45,3 +44,4 @@ def run():
                     value = row.pop(key)
                     row[f'{key}_id'] = value
             model.objects.create(**row)
+    print('Successfull!!! Import finished.')

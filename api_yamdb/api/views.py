@@ -75,9 +75,9 @@ class TitleVewSet(viewsets.ModelViewSet):
     filterset_class = TitleFilter
 
     def get_serializer_class(self):
-        if self.request.method in ('POST', 'PATCH'):
-            return TitleSerializer
-        return TitleListSerializer
+        if self.request.method == 'GET':
+            return TitleListSerializer
+        return TitleSerializer
 
 
 class ListCreateDeletMixin(
@@ -106,12 +106,18 @@ class ReviewVeiewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = [IsAdminAuthorModeratorOrReadOnly]
 
+    def get_title(self):
+        if not hasattr(self, 'title'):
+            self.title = get_object_or_404(Title,
+                                           pk=self.kwargs.get('title_id'))
+        return self.title
+
     def get_queryset(self):
-        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
-        return title.reviews.all()
+        title = self.get_title()
+        return title.reviews.all().order_by('-pub_date')
 
     def perform_create(self, serializer):
-        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
+        title = self.get_title()
         serializer.save(author=self.request.user, title=title)
 
 
@@ -119,29 +125,21 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [IsAdminAuthorModeratorOrReadOnly]
 
-    def get_queryset(self):
+    def get_review(self):
         title_id = self.kwargs.get('title_id')
         review_id = self.kwargs.get('review_id')
 
         title = get_object_or_404(Title, id=title_id)
-        review = title.reviews.filter(id=review_id).first()
+        review = get_object_or_404(title.reviews, id=review_id)
 
-        if review is None:
-            raise ValueError('У произведения нет такого отзыва')
+        return review
 
-        queryset = review.comments.all()
-        return queryset
+    def get_queryset(self):
+        review = self.get_review()
+        return review.comments.all().order_by('-pub_date')
 
     def perform_create(self, serializer):
-        title_id = self.kwargs.get('title_id')
-        review_id = self.kwargs.get('review_id')
-
-        title = get_object_or_404(Title, id=title_id)
-        review = title.reviews.filter(id=review_id).first()
-
-        if review is None:
-            raise ValueError('У произведения нет такого отзыва')
-
+        review = self.get_review()
         serializer.save(author=self.request.user, review=review)
 
 

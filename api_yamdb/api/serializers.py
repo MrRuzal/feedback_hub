@@ -40,7 +40,15 @@ class TitleListSerializer(serializers.ModelSerializer):
     rating = serializers.IntegerField(read_only=True)
 
     class Meta:
-        fields = '__all__'
+        fields = (
+            'id',
+            'name',
+            'year',
+            'rating',
+            'description',
+            'genre',
+            'category',
+        )
         model = Title
 
 
@@ -112,14 +120,17 @@ class ReviewSerializer(serializers.ModelSerializer):
         Проверяет, что пользователь
         не оставляет отзыв на одно произведение дважды.
         """
-        request = self.context['request']
-        if request.method == 'POST':
-            title_id = request.parser_context['kwargs'].get('title_id')
-            user = request.user
-            if user.reviews.filter(title_id=title_id).exists():
-                raise serializers.ValidationError(
-                    'Нельзя оставить отзыв на одно произведение дважды'
-                )
+        request = self.context.get('request')
+        if not (request and request.method == 'POST'):
+            return attrs
+
+        title_id = self.context.get('view').kwargs.get('title_id')
+        user = request.user
+        if user.reviews.filter(title_id=title_id).exists():
+            raise serializers.ValidationError(
+                'Нельзя оставить отзыв на одно произведение дважды'
+            )
+
         return attrs
 
 
