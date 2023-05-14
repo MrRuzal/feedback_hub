@@ -1,45 +1,38 @@
-from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, mixins
-from django.core.mail import send_mail
 from django.conf import settings
-from django.db.models import Avg
 from django.contrib.auth.tokens import default_token_generator
-from rest_framework import status
-from rest_framework.response import Response
+from django.core.mail import send_mail
+from django.db.models import Avg
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.filters import SearchFilter
 from rest_framework.generics import CreateAPIView
-from rest_framework.permissions import (
-    AllowAny,
-    IsAuthenticated,
-    IsAuthenticatedOrReadOnly,
-)
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.serializers import ValidationError
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.decorators import action
-from rest_framework.serializers import ValidationError
-from rest_framework.filters import SearchFilter
+
 from api.filters import TitleFilter
-from django_filters.rest_framework import DjangoFilterBackend
-
-
-from api.serializers import (
-    TitleSerializer,
-    GenresSerializer,
-    CategoriesSerializer,
-    ReviewSerializer,
-    CommentSerializer,
-    UserSerializer,
-    UserRoleSerializer,
-    TokenSerializer,
-    SignupSerializer,
-    TitleListSerializer,
-)
-
-from reviews.models import Title, Category, Genre, User
 from api.permissions import (
     IsAdmin,
     IsAdminAuthorModeratorOrReadOnly,
     IsAdminOrReadOnly,
 )
+from api.serializers import (
+    CategoriesSerializer,
+    CommentSerializer,
+    GenresSerializer,
+    ReviewSerializer,
+    SignupSerializer,
+    TitleListSerializer,
+    TitleSerializer,
+    TokenSerializer,
+    UserRoleSerializer,
+    UserSerializer,
+)
+from reviews.models import Category, Genre, Title, User
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -72,7 +65,9 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class TitleVewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.annotate(rating=Avg('reviews__score'))
+    queryset = Title.objects.order_by('name').annotate(
+        rating=Avg('reviews__score')
+    )
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -89,25 +84,20 @@ class ListCreateDeletMixin(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    ...
+    lookup_field = 'slug'
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
 
 
 class CategoriesViewSet(ListCreateDeletMixin):
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
-    lookup_field = 'slug'
-    permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (SearchFilter,)
-    search_fields = ('name',)
 
 
 class GenresViewSet(ListCreateDeletMixin):
     queryset = Genre.objects.all()
     serializer_class = GenresSerializer
-    lookup_field = 'slug'
-    permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (SearchFilter,)
-    search_fields = ('name',)
 
 
 class ReviewVeiewSet(viewsets.ModelViewSet):
@@ -164,7 +154,7 @@ class SignupView(CreateAPIView):
         confirmation_code = default_token_generator.make_token(user)
         email_data = {
             'subject': 'Добро пожаловать на наш сайт!',
-            'message': f'Your confirmation_code: {confirmation_code}',
+            'message': f'Ваш confirmation_code: {confirmation_code}',
             'from_email': settings.TOKEN_EMAIL,
             'recipient_list': [user.email],
         }

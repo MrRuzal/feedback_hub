@@ -1,13 +1,13 @@
-from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, User
 from django.core.validators import (
-    RegexValidator,
-    MinValueValidator,
     MaxValueValidator,
+    MinValueValidator,
+    RegexValidator,
 )
+from django.db import models
 from rest_framework import status
-from django.contrib.auth.models import User
-from api.validators import validate_username
+
+from api.validators import validate_username, validet_year
 
 
 class User(AbstractUser):
@@ -54,6 +54,15 @@ class User(AbstractUser):
         default=Role.USER,
         verbose_name='Роли',
     )
+
+    def if_user(self):
+        return self.role == 'user'
+
+    def is_admin(self):
+        return self.role == 'admin'
+
+    def is_moredator(self):
+        return self.role == 'moderator'
 
     class Meta:
         verbose_name = 'Пользователь'
@@ -106,7 +115,9 @@ class Title(models.Model):
     )
     count_review = models.IntegerField('Колличество ревью', default=0)
     sum_score = models.IntegerField('Сумма оценок ревью', default=0)
-    year = models.IntegerField(verbose_name='Год выпуска')
+    year = models.IntegerField(
+        validators=(validet_year,), verbose_name='Год выпуска'
+    )
     description = models.TextField(verbose_name='Описание', blank=True)
     category = models.ForeignKey(
         Category,
@@ -171,12 +182,12 @@ class Comment(models.Model):
     class Meta:
         verbose_name = 'Коментария'
         verbose_name_plural = 'Коментарии'
-        ordering = ('review',)
+        ordering = ('-pub_date',)
 
 
 class GenreTitle(models.Model):
-    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
-    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+    title_id = models.ForeignKey(Title, on_delete=models.CASCADE)
+    genre_id = models.ForeignKey(Genre, on_delete=models.CASCADE)
 
     def str(self):
         return f'{self.title} {self.genre}'
