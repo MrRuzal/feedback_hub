@@ -65,7 +65,9 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class TitleVewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.annotate(rating=Avg('reviews__score'))
+    queryset = Title.objects.order_by('name').annotate(
+        rating=Avg('reviews__score')
+    )
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -82,25 +84,20 @@ class ListCreateDeletMixin(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    ...
+    lookup_field = 'slug'
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
 
 
 class CategoriesViewSet(ListCreateDeletMixin):
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
-    lookup_field = 'slug'
-    permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (SearchFilter,)
-    search_fields = ('name',)
 
 
 class GenresViewSet(ListCreateDeletMixin):
     queryset = Genre.objects.all()
     serializer_class = GenresSerializer
-    lookup_field = 'slug'
-    permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (SearchFilter,)
-    search_fields = ('name',)
 
 
 class ReviewVeiewSet(viewsets.ModelViewSet):
