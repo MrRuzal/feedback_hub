@@ -55,6 +55,11 @@ class User(AbstractUser):
         verbose_name='Роли',
     )
 
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+        ordering = ('username',)
+
 
 class Category(models.Model):
     name = models.CharField(max_length=256, verbose_name='Название категории')
@@ -68,6 +73,11 @@ class Category(models.Model):
             )
         ],
     )
+
+    class Meta:
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
+        ordering = ('name',)
 
 
 class Genre(models.Model):
@@ -83,19 +93,21 @@ class Genre(models.Model):
         ],
     )
 
+    class Meta:
+        verbose_name = 'Жанр'
+        verbose_name_plural = 'Жанры'
+        ordering = ('name',)
+
 
 class Title(models.Model):
     name = models.CharField(
         max_length=256,
         verbose_name='название',
     )
-    rating = models.IntegerField(
-        verbose_name='Рейтинг', null=True, default=None
-    )
-    count_review = models.IntegerField('Колличество оевью', default=0)
+    count_review = models.IntegerField('Колличество ревью', default=0)
     sum_score = models.IntegerField('Сумма оценок ревью', default=0)
-    year = models.IntegerField(verbose_name='год выпуска')
-    description = models.TextField(verbose_name='описание', blank=True)
+    year = models.IntegerField(verbose_name='Год выпуска')
+    description = models.TextField(verbose_name='Описание', blank=True)
     category = models.ForeignKey(
         Category,
         related_name='title',
@@ -109,6 +121,11 @@ class Title(models.Model):
         related_name='title',
         blank=True,
     )
+
+    class Meta:
+        verbose_name = 'Произведения'
+        verbose_name_plural = 'Произведении'
+        ordering = ('name',)
 
 
 class Review(models.Model):
@@ -129,6 +146,8 @@ class Review(models.Model):
     )
 
     class Meta:
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
         ordering = ['-pub_date']
         constraints = [
             models.UniqueConstraint(
@@ -148,6 +167,11 @@ class Comment(models.Model):
     pub_date = models.DateTimeField(
         'Дата коммента', auto_now_add=True, db_index=True
     )
+
+    class Meta:
+        verbose_name = 'Коментария'
+        verbose_name_plural = 'Коментарии'
+        ordering = ('review',)
 
 
 class GenreTitle(models.Model):
