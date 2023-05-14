@@ -115,16 +115,25 @@ class Title(models.Model):
         ordering = ('name',)
 
 
-class Review(models.Model):
-    title = models.ForeignKey(
-        Title, on_delete=models.CASCADE, related_name='reviews'
-    )
+class AbstractReviewComment(models.Model):
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='reviews'
+        User, on_delete=models.CASCADE, related_name='%(class)ss'
     )
     text = models.TextField()
     pub_date = models.DateTimeField(
-        'Дата ревью', auto_now_add=True, db_index=True
+        'Дата ревью',
+        auto_now_add=True,
+        db_index=True,
+    )
+
+    class Meta:
+        abstract = True
+        ordering = ['-pub_date']
+
+
+class Review(AbstractReviewComment):
+    title = models.ForeignKey(
+        Title, on_delete=models.CASCADE, related_name='reviews'
     )
     score = models.IntegerField(
         'Оценка',
@@ -135,7 +144,6 @@ class Review(models.Model):
     class Meta:
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
-        ordering = ['-pub_date']
         constraints = [
             models.UniqueConstraint(
                 name='unique_review', fields=['author', 'title']
@@ -143,22 +151,14 @@ class Review(models.Model):
         ]
 
 
-class Comment(models.Model):
+class Comment(AbstractReviewComment):
     review = models.ForeignKey(
         Review, on_delete=models.CASCADE, related_name='comments'
-    )
-    author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='comments'
-    )
-    text = models.TextField()
-    pub_date = models.DateTimeField(
-        'Дата коммента', auto_now_add=True, db_index=True
     )
 
     class Meta:
         verbose_name = 'Коментария'
         verbose_name_plural = 'Коментарии'
-        ordering = ('-pub_date',)
 
 
 class GenreTitle(models.Model):

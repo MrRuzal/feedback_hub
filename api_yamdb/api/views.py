@@ -106,7 +106,7 @@ class ReviewVeiewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
-        return title.reviews.all()
+        return title.reviews.all().order_by('-pub_date')
 
     def perform_create(self, serializer):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
@@ -127,7 +127,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         if review is None:
             raise ValueError('У произведения нет такого отзыва')
 
-        queryset = review.comments.all()
+        queryset = review.comments.all().order_by('-pub_date')
         return queryset
 
     def perform_create(self, serializer):
