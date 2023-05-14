@@ -84,25 +84,20 @@ class ListCreateDeletMixin(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    ...
+    lookup_field = 'slug'
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
 
 
 class CategoriesViewSet(ListCreateDeletMixin):
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
-    lookup_field = 'slug'
-    permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (SearchFilter,)
-    search_fields = ('name',)
 
 
 class GenresViewSet(ListCreateDeletMixin):
     queryset = Genre.objects.all()
     serializer_class = GenresSerializer
-    lookup_field = 'slug'
-    permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (SearchFilter,)
-    search_fields = ('name',)
 
 
 class ReviewVeiewSet(viewsets.ModelViewSet):
