@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractUser, User
+from django.contrib.auth.models import AbstractUser
 from django.core.validators import (
     MaxValueValidator,
     MinValueValidator,
@@ -93,18 +93,12 @@ class Category(NameAndSlugAbstarct):
         verbose_name_plural = 'Категории'
         ordering = ('name',)
 
-    def __str__(self):
-        return self.name
-
 
 class Genre(NameAndSlugAbstarct):
     class Meta:
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
         ordering = ('name',)
-
-    def __str__(self):
-        return self.name
 
 
 class Title(models.Model):
