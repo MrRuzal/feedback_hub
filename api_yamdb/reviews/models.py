@@ -7,7 +7,7 @@ from django.core.validators import (
 from django.db import models
 from rest_framework import status
 
-from api.validators import validate_username, validet_year
+from .validators import validet_year
 
 
 class User(AbstractUser):
@@ -55,10 +55,22 @@ class User(AbstractUser):
         verbose_name='Роли',
     )
 
+    def if_user(self):
+        return self.role == 'user'
+
+    def is_admin(self):
+        return self.role == 'admin'
+
+    def is_moredator(self):
+        return self.role == 'moderator'
+
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
         ordering = ('username',)
+
+    def __str__(self):
+        return self.username
 
 
 class NameAndSlugAbstarct(models.Model):
@@ -70,6 +82,9 @@ class NameAndSlugAbstarct(models.Model):
 
     class Meta:
         abstract = True
+
+    def __str__(self):
+        return self.name
 
 
 class Category(NameAndSlugAbstarct):
@@ -114,6 +129,9 @@ class Title(models.Model):
         verbose_name_plural = 'Произведении'
         ordering = ('name',)
 
+    def __str__(self):
+        return self.name
+
 
 class AbstractReviewComment(models.Model):
     author = models.ForeignKey(
@@ -150,6 +168,9 @@ class Review(AbstractReviewComment):
             )
         ]
 
+    def __str__(self):
+        return f'{self.author.username} {self.title}'
+
 
 class Comment(AbstractReviewComment):
     review = models.ForeignKey(
@@ -160,10 +181,13 @@ class Comment(AbstractReviewComment):
         verbose_name = 'Коментария'
         verbose_name_plural = 'Коментарии'
 
+    def __str__(self):
+        return f'{self.author.username} {self.review}'
+
 
 class GenreTitle(models.Model):
     title_id = models.ForeignKey(Title, on_delete=models.CASCADE)
     genre_id = models.ForeignKey(Genre, on_delete=models.CASCADE)
 
-    def str(self):
+    def __str__(self):
         return f'{self.title} {self.genre}'
