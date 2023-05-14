@@ -18,8 +18,8 @@ def validate_username_bad_sign(value):
     invalid_chars = re.findall(r'[^\w.@+-]', value)
     if invalid_chars:
         raise ValidationError(
-            f'Имя пользователя содержит недопустимые символы: '
-            '{", ".join(set(invalid_chars))}.'
+            f"Имя пользователя содержит недопустимые символы: "
+            f"{', '.join(set(invalid_chars))}."
         )
     return value
 
