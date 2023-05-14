@@ -73,9 +73,9 @@ class TitleVewSet(viewsets.ModelViewSet):
     filterset_class = TitleFilter
 
     def get_serializer_class(self):
-        if self.request.method in ('POST', 'PATCH'):
-            return TitleSerializer
-        return TitleListSerializer
+        if self.request.method == 'GET':
+            return TitleListSerializer
+        return TitleSerializer
 
 
 class ListCreateDeletMixin(
@@ -111,8 +111,8 @@ class ReviewVeiewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         title = self.get_title()
-        return title.reviews.select_related('title')
-
+        return title.reviews.all().order_by('-pub_date')
+        
     def perform_create(self, serializer):
         title = self.get_title()
         serializer.save(author=self.request.user, title=title)
@@ -133,7 +133,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         review = self.get_review()
-        return review.comments.all()
+        return review.comments.all().order_by('-pub_date')
 
     def perform_create(self, serializer):
         review = self.get_review()
