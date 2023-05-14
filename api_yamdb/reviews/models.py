@@ -2,11 +2,13 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import (
     MaxValueValidator,
     MinValueValidator,
-    RegexValidator,
 )
 from django.db import models
-from rest_framework import status
-
+from reviews.validators import (
+    validate_username,
+    validate_username_bad_sign,
+    validet_year,
+)
 
 MAX_CHAR_LENGTH = 150
 MAX_EMAIL_LENGTH = 254
@@ -26,10 +28,7 @@ class User(AbstractUser):
     username = models.CharField(
         max_length=MAX_CHAR_LENGTH,
         unique=True,
-        validators=[
-            RegexValidator(r'^(?!me$|ME$)[\w.@+-]+\Z'),
-            validate_username,
-        ],
+        validators=[validate_username, validate_username_bad_sign],
     )
     email = models.EmailField(
         max_length=MAX_EMAIL_LENGTH,
