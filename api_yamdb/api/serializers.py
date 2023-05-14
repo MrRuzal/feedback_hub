@@ -32,6 +32,9 @@ class TitleSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = Title
 
+    def to_representation(self, instance):
+        return TitleListSerializer(instance).data
+
 
 class TitleListSerializer(serializers.ModelSerializer):
     genre = GenresSerializer(read_only=True, many=True)
@@ -39,7 +42,15 @@ class TitleListSerializer(serializers.ModelSerializer):
     rating = serializers.IntegerField(read_only=True)
 
     class Meta:
-        fields = '__all__'
+        fields = (
+            'id',
+            'name',
+            'year',
+            'rating',
+            'description',
+            'genre',
+            'category',
+        )
         model = Title
 
 
