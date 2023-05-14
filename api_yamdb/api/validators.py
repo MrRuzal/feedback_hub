@@ -6,7 +6,7 @@ from django.utils import timezone
 
 def validate_username(value):
     """Убедитесь, что имя пользователя не равно 'me'."""
-    if value.lower() == 'me':
+    if value == 'me':
         raise ValidationError("Username 'me' is not allowed.")
     return value
 
