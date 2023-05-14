@@ -13,6 +13,10 @@ from reviews.models import (
 )
 
 
+def out_green(text):
+    print("\033[32m {}".format(text))
+
+
 def run():
     local_base_dir = os.path.join(BASE_DIR, 'static\\data\\')
     files_csv = {
@@ -44,4 +48,5 @@ def run():
                     value = row.pop(key)
                     row[f'{key}_id'] = value
             model.objects.create(**row)
-    print('Successfull!!! Import finished.')
+    out_green('Successfull!!! ', end='')
+    print('import finished.')
