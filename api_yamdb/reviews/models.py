@@ -2,45 +2,47 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import (
     MaxValueValidator,
     MinValueValidator,
-    RegexValidator,
 )
 from django.db import models
-from rest_framework import status
+from reviews.validators import (
+    validate_username,
+    validate_username_bad_sign,
+)
 
-from reviews.validators import validet_year, validate_username
+from reviews.validators import validate_year, validate_username
+
+MAX_CHAR_LENGTH = 150
+MAX_EMAIL_LENGTH = 254
+
+
+class Role(models.TextChoices):
+    USER = 'user', 'пользователь'
+    MODERATOR = 'moderator', 'модератор'
+    ADMIN = 'admin', 'администратор'
+
+    @classmethod
+    def value_length(cls):
+        return len(max(cls.values, key=len))
 
 
 class User(AbstractUser):
-    class Role(models.TextChoices):
-        USER = 'user', 'пользователь'
-        MODERATOR = 'moderator', 'модератор'
-        ADMIN = 'admin', 'администратор'
-
     username = models.CharField(
-        max_length=150,
+        max_length=MAX_CHAR_LENGTH,
         unique=True,
-        validators=[
-            RegexValidator(
-                regex=r'^[\w.@+-]+\Z',
-                message='150 characters or fewer. '
-                'Letters, digits and @/./+/-/_ only',
-                code=status.HTTP_400_BAD_REQUEST,
-            ),
-            validate_username,
-        ],
+        validators=[validate_username, validate_username_bad_sign],
     )
     email = models.EmailField(
-        max_length=254,
+        max_length=MAX_EMAIL_LENGTH,
         unique=True,
         blank=False,
     )
     first_name = models.CharField(
-        max_length=150,
+        max_length=MAX_CHAR_LENGTH,
         blank=True,
         verbose_name='Имя',
     )
     last_name = models.CharField(
-        max_length=150,
+        max_length=MAX_CHAR_LENGTH,
         blank=True,
         verbose_name='Фамилия',
     )
@@ -49,20 +51,23 @@ class User(AbstractUser):
         verbose_name='Биография',
     )
     role = models.CharField(
-        max_length=10,
+        max_length=Role.value_length(),
         choices=Role.choices,
         default=Role.USER,
         verbose_name='Роли',
     )
 
-    def if_user(self):
-        return self.role == 'user'
+    @property
+    def is_user(self):
+        return self.role == Role.USER
 
+    @property
     def is_admin(self):
-        return self.role == 'admin'
+        return self.role == Role.ADMIN
 
+    @property
     def is_moredator(self):
-        return self.role == 'moderator'
+        return self.role == Role.MODERATOR
 
     class Meta:
         verbose_name = 'Пользователь'
@@ -73,7 +78,7 @@ class User(AbstractUser):
         return self.username
 
 
-class NameAndSlugAbstarct(models.Model):
+class NameAndSlugAbstract(models.Model):
     name = models.CharField(max_length=256, verbose_name='Название')
     slug = models.SlugField(
         max_length=50,
@@ -82,23 +87,24 @@ class NameAndSlugAbstarct(models.Model):
 
     class Meta:
         abstract = True
+        ordering = ('name',)
 
     def __str__(self):
         return self.name
 
 
-class Category(NameAndSlugAbstarct):
-    class Meta:
+class Category(NameAndSlugAbstract):
+    class Meta(NameAndSlugAbstract.Meta):
+        abstract = False
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
-        ordering = ('name',)
 
 
-class Genre(NameAndSlugAbstarct):
-    class Meta:
+class Genre(NameAndSlugAbstract):
+    class Meta(NameAndSlugAbstract.Meta):
+        abstract = False
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
-        ordering = ('name',)
 
 
 class Title(models.Model):
@@ -107,7 +113,7 @@ class Title(models.Model):
         verbose_name='название',
     )
     year = models.SmallIntegerField(
-        validators=(validet_year,), verbose_name='Год выпуска'
+        validators=(validate_year,), verbose_name='Год выпуска'
     )
     description = models.TextField(verbose_name='Описание', blank=True)
     category = models.ForeignKey(
@@ -146,7 +152,10 @@ class AbstractReviewComment(models.Model):
 
     class Meta:
         abstract = True
-        ordering = ['-pub_date']
+        ordering = ('-pub_date',)
+
+    def __str__(self):
+        return f'{self.author.username}'
 
 
 class Review(AbstractReviewComment):
@@ -159,7 +168,8 @@ class Review(AbstractReviewComment):
         validators=[MaxValueValidator(10), MinValueValidator(1)],
     )
 
-    class Meta:
+    class Meta(AbstractReviewComment.Meta):
+        abstract = False
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
         constraints = [
@@ -169,7 +179,7 @@ class Review(AbstractReviewComment):
         ]
 
     def __str__(self):
-        return f'{self.author.username} {self.title}'
+        return f'{super()} {self.title}'
 
 
 class Comment(AbstractReviewComment):
@@ -177,12 +187,13 @@ class Comment(AbstractReviewComment):
         Review, on_delete=models.CASCADE, related_name='comments'
     )
 
-    class Meta:
+    class Meta(AbstractReviewComment.Meta):
+        abstract = False
         verbose_name = 'Коментария'
         verbose_name_plural = 'Коментарии'
 
     def __str__(self):
-        return f'{self.author.username} {self.review}'
+        return f'{super()} {self.review}'
 
 
 class GenreTitle(models.Model):

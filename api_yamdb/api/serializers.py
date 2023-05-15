@@ -1,11 +1,11 @@
-from django.db import IntegrityError
+from django.core.validators import RegexValidator
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
-from reviews.models import validate_username, validate_username_bad_sign
+from reviews.validators import validate_username, validate_username_bad_sign
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
-USER_FIELDS = ['username', 'email', 'bio', 'role', 'first_name', 'last_name']
+MAX_USERNAME_LENGTH = 150
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -18,6 +18,22 @@ class GenresSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('name', 'slug')
         model = Genre
+
+
+class TitleListSerializer(serializers.ModelSerializer):
+    genre = GenresSerializer(read_only=True, many=True)
+    category = CategoriesSerializer(read_only=True)
+    rating = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        fields = '__all__'
+        model = Title
+        read_only_fields = (
+            'id',
+            'name',
+            'year',
+            'description',
+        )
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -36,61 +52,47 @@ class TitleSerializer(serializers.ModelSerializer):
         return TitleListSerializer(instance).data
 
 
-class TitleListSerializer(serializers.ModelSerializer):
-    genre = GenresSerializer(read_only=True, many=True)
-    category = CategoriesSerializer(read_only=True)
-    rating = serializers.IntegerField(read_only=True)
-
-    class Meta:
-        fields = (
-            'id',
-            'name',
-            'year',
-            'rating',
-            'description',
-            'genre',
-            'category',
-        )
-        model = Title
-
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = USER_FIELDS
+        fields = (
+            'username',
+            'email',
+            'bio',
+            'role',
+            'first_name',
+            'last_name',
+        )
         model = User
 
 
-class UserRoleSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = USER_FIELDS
-        model = User
-        read_only_fields = ['role']
+class UserRoleSerializer(UserSerializer):
+    class Meta(UserSerializer.Meta):
+        read_only_fields = ('role',)
 
 
 class TokenSerializer(serializers.Serializer):
     username = serializers.CharField(
         required=True,
-        max_length=150,
+        max_length=MAX_USERNAME_LENGTH,
+        validators=[
+            RegexValidator(
+                r'^(?!me$|ME$)[\w.@+-]+\Z',
+                message='Некорректное значение поля "username"',
+            ),
+        ],
     )
     confirmation_code = serializers.CharField(required=True)
 
 
-class SignupSerializer(serializers.ModelSerializer):
+class SignupSerializer(serializers.Serializer):
     username = serializers.CharField(
         required=True,
-        max_length=150,
+        max_length=MAX_USERNAME_LENGTH,
         validators=[validate_username, validate_username_bad_sign],
     )
     email = serializers.EmailField(
         max_length=254,
     )
-
-    def create(self, validated_data):
-        try:
-            user = User.objects.get_or_create(**validated_data)[0]
-        except IntegrityError:
-            raise serializers.ValidationError('Такая запись уже существует')
-        return user
 
     class Meta:
         fields = ('username', 'email')
