@@ -1,11 +1,11 @@
-from django.db import IntegrityError
+from django.core.validators import RegexValidator
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
-from api.validators import validate_username, validate_username_bad_sign
+from reviews.validators import validate_username, validate_username_bad_sign
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
-USER_FIELDS = ['username', 'email', 'bio', 'role', 'first_name', 'last_name']
+MAX_USERNAME_LENGTH = 150
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -42,47 +42,59 @@ class TitleListSerializer(serializers.ModelSerializer):
     rating = serializers.IntegerField(read_only=True)
 
     class Meta:
-        fields = '__all__'
+        fields = (
+            'id',
+            'name',
+            'year',
+            'rating',
+            'description',
+            'genre',
+            'category',
+        )
         model = Title
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = USER_FIELDS
+        fields = (
+            'username',
+            'email',
+            'bio',
+            'role',
+            'first_name',
+            'last_name',
+        )
         model = User
 
 
-class UserRoleSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = USER_FIELDS
-        model = User
+class UserRoleSerializer(UserSerializer):
+    class Meta(UserSerializer.Meta):
         read_only_fields = ['role']
 
 
 class TokenSerializer(serializers.Serializer):
     username = serializers.CharField(
         required=True,
-        max_length=150,
+        max_length=MAX_USERNAME_LENGTH,
+        validators=[
+            RegexValidator(
+                r'^(?!me$|ME$)[\w.@+-]+\Z',
+                message='Некорректное значение поля "username"',
+            ),
+        ],
     )
     confirmation_code = serializers.CharField(required=True)
 
 
-class SignupSerializer(serializers.ModelSerializer):
+class SignupSerializer(serializers.Serializer):
     username = serializers.CharField(
         required=True,
-        max_length=150,
+        max_length=MAX_USERNAME_LENGTH,
         validators=[validate_username, validate_username_bad_sign],
     )
     email = serializers.EmailField(
         max_length=254,
     )
-
-    def create(self, validated_data):
-        try:
-            user = User.objects.get_or_create(**validated_data)[0]
-        except IntegrityError:
-            raise serializers.ValidationError('Такая запись уже существует')
-        return user
 
     class Meta:
         fields = ('username', 'email')
@@ -109,14 +121,17 @@ class ReviewSerializer(serializers.ModelSerializer):
         Проверяет, что пользователь
         не оставляет отзыв на одно произведение дважды.
         """
-        request = self.context['request']
-        if request.method == 'POST':
-            title_id = request.parser_context['kwargs'].get('title_id')
-            user = request.user
-            if user.reviews.filter(title_id=title_id).exists():
-                raise serializers.ValidationError(
-                    'Нельзя оставить отзыв на одно произведение дважды'
-                )
+        request = self.context.get('request')
+        if not (request and request.method == 'POST'):
+            return attrs
+
+        title_id = self.context.get('view').kwargs.get('title_id')
+        user = request.user
+        if user.reviews.filter(title_id=title_id).exists():
+            raise serializers.ValidationError(
+                'Нельзя оставить отзыв на одно произведение дважды'
+            )
+
         return attrs
 
 
