@@ -5,9 +5,8 @@ from django.db import models
 from reviews.validators import (
     validate_username,
     validate_username_bad_sign,
+    validate_year,
 )
-
-from reviews.validators import validate_year, validate_username
 
 MAX_CHAR_LENGTH = 150
 MAX_EMAIL_LENGTH = 254
@@ -60,7 +59,7 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.role == Role.ADMIN or self.is_superuser
+        return self.role == Role.ADMIN or self.is_superuser or self.is_staff
 
     @property
     def is_moderator(self):

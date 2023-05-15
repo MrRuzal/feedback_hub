@@ -48,7 +48,7 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(
         methods=['get', 'patch'],
         detail=False,
-        url_path=settings.RESERVED_USERNAMES[0],
+        url_path=settings.RESERVED_USERNAMES_ME,
         permission_classes=(IsAuthenticated,),
     )
     def get_patch(self, request):
@@ -150,7 +150,8 @@ class SignupView(CreateAPIView):
                     **{value: serializer.validated_data[value]}
                 ).exists():
                     raise ValidationError(
-                        {value: ["Такое значение уже существует"]}
+                        f'Пользователь с {value}: '
+                        f'{serializer.validated_data[value]} уже существует'
                     )
         confirmation_code = default_token_generator.make_token(user)
         email_data = {
