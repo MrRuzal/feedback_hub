@@ -48,7 +48,7 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(
         methods=['get', 'patch'],
         detail=False,
-        url_path='me',
+        url_path=settings.RESERVED_USERNAMES[0],
         permission_classes=(IsAuthenticated,),
     )
     def get_patch(self, request):
@@ -152,9 +152,15 @@ class SignupView(CreateAPIView):
         serializer = SignupSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
-            user = User.objects.get_or_create(**serializer.validated_data)[0]
+            user, _ = User.objects.get_or_create(**serializer.validated_data)
         except IntegrityError:
-            raise ValidationError('Такая запись уже существует')
+            for value in ['username', 'email']:
+                if User.objects.filter(
+                    **{value: serializer.validated_data[value]}
+                ).exists():
+                    raise ValidationError(
+                        {value: ["Такое значение уже существует"]}
+                    )
         confirmation_code = default_token_generator.make_token(user)
         email_data = {
             'subject': 'Добро пожаловать на наш сайт!',

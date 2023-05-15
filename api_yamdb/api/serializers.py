@@ -1,4 +1,3 @@
-from django.core.validators import RegexValidator
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
@@ -12,6 +11,7 @@ from reviews.models import (
     User,
 )
 from reviews.validators import validate_username, validate_username_bad_sign
+from reviews.models import MAX_EMAIL_LENGTH
 
 MAX_CHAR_LENGTH = 150
 
@@ -80,31 +80,20 @@ class UserRoleSerializer(UserSerializer):
 
 class TokenSerializer(serializers.Serializer):
     username = serializers.CharField(
-        required=True,
-        max_length=MAX_USERNAME_LENGTH,
-        validators=[
-            RegexValidator(
-                r'^(?!me$|ME$)[\w.@+-]+\Z',
-                message='Некорректное значение поля "username"',
-            ),
-        ],
+        max_length=MAX_CHAR_LENGTH,
+        validators=[validate_username, validate_username_bad_sign],
     )
-    confirmation_code = serializers.CharField(required=True)
+    confirmation_code = serializers.CharField()
 
 
 class SignupSerializer(serializers.Serializer):
     username = serializers.CharField(
-        required=True,
-        max_length=MAX_USERNAME_LENGTH,
+        max_length=MAX_CHAR_LENGTH,
         validators=[validate_username, validate_username_bad_sign],
     )
     email = serializers.EmailField(
-        max_length=254,
+        max_length=MAX_EMAIL_LENGTH,
     )
-
-    class Meta:
-        fields = ('username', 'email')
-        model = User
 
 
 class ReviewSerializer(serializers.ModelSerializer):
