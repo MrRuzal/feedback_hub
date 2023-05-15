@@ -34,7 +34,7 @@ python manage.py migrate
 ```
 Заполнить базу данных:
 ```bash
-python manage.py runscript
+python manage.py runscript import_data
 ```
 Запустить проект:  
 ```bash
