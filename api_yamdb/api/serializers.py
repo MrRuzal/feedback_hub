@@ -1,11 +1,19 @@
-from django.core.validators import RegexValidator
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
+from reviews.models import (
+    MAX_CHAR_LENGTH,
+    Category,
+    Comment,
+    Genre,
+    Review,
+    Title,
+    User,
+)
 from reviews.validators import validate_username, validate_username_bad_sign
-from reviews.models import Category, Comment, Genre, Review, Title, User
+from reviews.models import MAX_EMAIL_LENGTH
 
-MAX_USERNAME_LENGTH = 150
+MAX_CHAR_LENGTH = 150
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -18,6 +26,22 @@ class GenresSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('name', 'slug')
         model = Genre
+
+
+class TitleListSerializer(serializers.ModelSerializer):
+    genre = GenresSerializer(read_only=True, many=True)
+    category = CategoriesSerializer(read_only=True)
+    rating = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        fields = '__all__'
+        model = Title
+        read_only_fields = (
+            'id',
+            'name',
+            'year',
+            'description',
+        )
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -36,24 +60,6 @@ class TitleSerializer(serializers.ModelSerializer):
         return TitleListSerializer(instance).data
 
 
-class TitleListSerializer(serializers.ModelSerializer):
-    genre = GenresSerializer(read_only=True, many=True)
-    category = CategoriesSerializer(read_only=True)
-    rating = serializers.IntegerField(read_only=True)
-
-    class Meta:
-        fields = (
-            'id',
-            'name',
-            'year',
-            'rating',
-            'description',
-            'genre',
-            'category',
-        )
-        model = Title
-
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         fields = (
@@ -69,36 +75,25 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserRoleSerializer(UserSerializer):
     class Meta(UserSerializer.Meta):
-        read_only_fields = ['role']
+        read_only_fields = ('role',)
 
 
 class TokenSerializer(serializers.Serializer):
     username = serializers.CharField(
-        required=True,
-        max_length=MAX_USERNAME_LENGTH,
-        validators=[
-            RegexValidator(
-                r'^(?!me$|ME$)[\w.@+-]+\Z',
-                message='Некорректное значение поля "username"',
-            ),
-        ],
+        max_length=MAX_CHAR_LENGTH,
+        validators=[validate_username, validate_username_bad_sign],
     )
-    confirmation_code = serializers.CharField(required=True)
+    confirmation_code = serializers.CharField()
 
 
 class SignupSerializer(serializers.Serializer):
     username = serializers.CharField(
-        required=True,
-        max_length=MAX_USERNAME_LENGTH,
+        max_length=MAX_CHAR_LENGTH,
         validators=[validate_username, validate_username_bad_sign],
     )
     email = serializers.EmailField(
-        max_length=254,
+        max_length=MAX_EMAIL_LENGTH,
     )
-
-    class Meta:
-        fields = ('username', 'email')
-        model = User
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -122,12 +117,12 @@ class ReviewSerializer(serializers.ModelSerializer):
         не оставляет отзыв на одно произведение дважды.
         """
         request = self.context.get('request')
-        if not (request and request.method == 'POST'):
+        if not request.method == 'POST':
             return attrs
 
         title_id = self.context.get('view').kwargs.get('title_id')
-        user = request.user
-        if user.reviews.filter(title_id=title_id).exists():
+        author = self.context.get('request').user
+        if Review.objects.filter(author=author, title=title_id).exists():
             raise serializers.ValidationError(
                 'Нельзя оставить отзыв на одно произведение дважды'
             )

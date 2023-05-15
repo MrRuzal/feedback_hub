@@ -33,7 +33,7 @@ from api.serializers import (
     UserRoleSerializer,
     UserSerializer,
 )
-from reviews.models import Category, Genre, Title, User
+from reviews.models import Category, Genre, Title, User, Review
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -48,7 +48,7 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(
         methods=['get', 'patch'],
         detail=False,
-        url_path='me',
+        url_path=settings.RESERVED_USERNAMES[0],
         permission_classes=(IsAuthenticated,),
     )
     def get_patch(self, request):
@@ -68,9 +68,9 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class TitleVewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.order_by('name').annotate(
+    queryset = Title.objects.annotate(
         rating=Avg('reviews__score')
-    )
+    ).order_by('name')
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -81,7 +81,7 @@ class TitleVewSet(viewsets.ModelViewSet):
         return TitleSerializer
 
 
-class ListCreateDeletMixin(
+class CategoryGenreListCreateDestroyMixin(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
@@ -93,12 +93,12 @@ class ListCreateDeletMixin(
     search_fields = ('name',)
 
 
-class CategoriesViewSet(ListCreateDeletMixin):
+class CategoriesViewSet(CategoryGenreListCreateDestroyMixin):
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
 
 
-class GenresViewSet(ListCreateDeletMixin):
+class GenresViewSet(CategoryGenreListCreateDestroyMixin):
     queryset = Genre.objects.all()
     serializer_class = GenresSerializer
 
@@ -108,15 +108,13 @@ class ReviewVeiewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminAuthorModeratorOrReadOnly]
 
     def get_title(self):
-        if not hasattr(self, 'title'):
-            self.title = get_object_or_404(
-                Title, pk=self.kwargs.get('title_id')
-            )
-        return self.title
+
+        return get_object_or_404(
+            Title, pk=self.kwargs.get('title_id')
+        )
 
     def get_queryset(self):
-        title = self.get_title()
-        return title.reviews.all().order_by('-pub_date')
+        return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
         title = self.get_title()
@@ -131,14 +129,14 @@ class CommentViewSet(viewsets.ModelViewSet):
         title_id = self.kwargs.get('title_id')
         review_id = self.kwargs.get('review_id')
 
-        title = get_object_or_404(Title, id=title_id)
-        review = get_object_or_404(title.reviews, id=review_id)
-
-        return review
+        return get_object_or_404(
+            Review,
+            id=review_id,
+            title__id=title_id
+        )
 
     def get_queryset(self):
-        review = self.get_review()
-        return review.comments.all().order_by('-pub_date')
+        return self.get_review().comments.all()
 
     def perform_create(self, serializer):
         review = self.get_review()
@@ -152,13 +150,19 @@ class SignupView(CreateAPIView):
         serializer = SignupSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
-            user = User.objects.get_or_create(**serializer.validated_data)[0]
+            user, _ = User.objects.get_or_create(**serializer.validated_data)
         except IntegrityError:
-            raise ValidationError('Такая запись уже существует')
+            for value in ['username', 'email']:
+                if User.objects.filter(
+                    **{value: serializer.validated_data[value]}
+                ).exists():
+                    raise ValidationError(
+                        {value: ["Такое значение уже существует"]}
+                    )
         confirmation_code = default_token_generator.make_token(user)
         email_data = {
             'subject': 'Добро пожаловать на наш сайт!',
-            'message': f'Ваш confirmation_code: {confirmation_code}',
+            'message': f'Ваш код подтверждения: {confirmation_code}',
             'from_email': settings.TOKEN_EMAIL,
             'recipient_list': [user.email],
         }
