@@ -85,13 +85,6 @@ class SignupSerializer(serializers.ModelSerializer):
         max_length=254,
     )
 
-    def create(self, validated_data):
-        try:
-            user = User.objects.get_or_create(**validated_data)[0]
-        except IntegrityError:
-            raise serializers.ValidationError('Такая запись уже существует')
-        return user
-
     class Meta:
         fields = ('username', 'email')
         model = User
