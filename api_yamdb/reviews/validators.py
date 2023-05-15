@@ -7,7 +7,7 @@ from rest_framework.serializers import ValidationError
 
 def validate_username(value):
     """Убедитесь, что имя пользователя не равно зарезервированным никам."""
-    if value in settings.RESERVED_USERNAMES:
+    if value in settings.RESERVED_USERNAMES_ME:
         raise ValidationError(f"Имя пользователя '{value}' недопустимо.")
     return value
 

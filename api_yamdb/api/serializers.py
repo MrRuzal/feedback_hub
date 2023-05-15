@@ -1,9 +1,11 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
+from rest_framework.validators import UniqueValidator
 
 from reviews.models import (
     MAX_CHAR_LENGTH,
+    MAX_EMAIL_LENGTH,
     Category,
     Comment,
     Genre,
@@ -12,9 +14,6 @@ from reviews.models import (
     User,
 )
 from reviews.validators import validate_username, validate_username_bad_sign
-from reviews.models import MAX_EMAIL_LENGTH
-
-MAX_CHAR_LENGTH = 150
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -62,6 +61,18 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        max_length=MAX_CHAR_LENGTH,
+        validators=[
+            validate_username,
+            validate_username_bad_sign,
+            UniqueValidator(
+                queryset=User.objects.all(),
+                message='Пользователь уже существует',
+            ),
+        ],
+    )
+
     class Meta:
         fields = (
             'username',
@@ -89,10 +100,12 @@ class TokenSerializer(serializers.Serializer):
 
 class SignupSerializer(serializers.Serializer):
     username = serializers.CharField(
+        required=True,
         max_length=MAX_CHAR_LENGTH,
         validators=[validate_username, validate_username_bad_sign],
     )
     email = serializers.EmailField(
+        required=True,
         max_length=MAX_EMAIL_LENGTH,
     )
 
