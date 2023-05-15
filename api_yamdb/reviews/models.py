@@ -7,10 +7,10 @@ from django.db import models
 from reviews.validators import (
     validate_username,
     validate_username_bad_sign,
-    validet_year,
 )
 
 from reviews.validators import validate_year, validate_username
+
 MAX_CHAR_LENGTH = 150
 MAX_EMAIL_LENGTH = 254
 
