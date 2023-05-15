@@ -24,6 +24,9 @@ def validate_username_bad_sign(value):
     return value
 
 
-def validet_year(year):
+def validate_year(year):
     if year > timezone.now().year:
-        raise ValidationError('Такого года быть не может')
+        raise ValidationError(
+            f'Год не может быть больше чем {timezone.now().year}'
+            f'Вы ввели {year}'
+        )

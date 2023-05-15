@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
+from django.db import IntegrityError
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -81,7 +81,7 @@ class TitleVewSet(viewsets.ModelViewSet):
         return TitleSerializer
 
 
-class ListCreateDeletMixin(
+class CategoryGenreListCreateDestroyMixin(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
@@ -93,12 +93,12 @@ class ListCreateDeletMixin(
     search_fields = ('name',)
 
 
-class CategoriesViewSet(ListCreateDeletMixin):
+class CategoriesViewSet(CategoryGenreListCreateDestroyMixin):
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
 
 
-class GenresViewSet(ListCreateDeletMixin):
+class GenresViewSet(CategoryGenreListCreateDestroyMixin):
     queryset = Genre.objects.all()
     serializer_class = GenresSerializer
 
@@ -116,7 +116,7 @@ class ReviewVeiewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         title = self.get_title()
-        return title.reviews.all().order_by('-pub_date')
+        return title.reviews.all()
 
     def perform_create(self, serializer):
         title = self.get_title()
@@ -138,7 +138,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         review = self.get_review()
-        return review.comments.all().order_by('-pub_date')
+        return review.comments.all()
 
     def perform_create(self, serializer):
         review = self.get_review()
@@ -151,8 +151,10 @@ class SignupView(CreateAPIView):
     def create(self, request):
         serializer = SignupSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        user = User.objects.get(email=serializer.data['email'])
+        try:
+            user = User.objects.get_or_create(**serializer.validated_data)[0]
+        except IntegrityError:
+            raise ValidationError('Такая запись уже существует')
         confirmation_code = default_token_generator.make_token(user)
         email_data = {
             'subject': 'Добро пожаловать на наш сайт!',
