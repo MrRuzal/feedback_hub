@@ -48,7 +48,7 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(
         methods=['get', 'patch'],
         detail=False,
-        url_path=settings.RESERVED_USERNAMES[0],
+        url_path=settings.RESERVED_USERNAMES_ME,
         permission_classes=(IsAuthenticated,),
     )
     def get_patch(self, request):
@@ -68,9 +68,9 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class TitleVewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.annotate(
-        rating=Avg('reviews__score')
-    ).order_by('name')
+    queryset = Title.objects.annotate(rating=Avg('reviews__score')).order_by(
+        'name'
+    )
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -108,10 +108,7 @@ class ReviewVeiewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminAuthorModeratorOrReadOnly]
 
     def get_title(self):
-
-        return get_object_or_404(
-            Title, pk=self.kwargs.get('title_id')
-        )
+        return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
 
     def get_queryset(self):
         return self.get_title().reviews.all()
@@ -129,11 +126,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         title_id = self.kwargs.get('title_id')
         review_id = self.kwargs.get('review_id')
 
-        return get_object_or_404(
-            Review,
-            id=review_id,
-            title__id=title_id
-        )
+        return get_object_or_404(Review, id=review_id, title__id=title_id)
 
     def get_queryset(self):
         return self.get_review().comments.all()
@@ -157,7 +150,8 @@ class SignupView(CreateAPIView):
                     **{value: serializer.validated_data[value]}
                 ).exists():
                     raise ValidationError(
-                        {value: ["Такое значение уже существует"]}
+                        f'Пользователь с {value}: '
+                        f'{serializer.validated_data[value]} уже существует'
                     )
         confirmation_code = default_token_generator.make_token(user)
         email_data = {

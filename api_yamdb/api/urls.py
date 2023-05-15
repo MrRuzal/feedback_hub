@@ -31,11 +31,7 @@ auth = [
     path('signup/', SignupView.as_view(), name='signup'),
 ]
 
-v1 = [
-    path('', include(router_v1.urls)),
-    path('auth/', include(auth)),
-]
-
 urlpatterns = [
-    path('v1/', include(v1)),
+    path('v1/', include(router_v1.urls)),
+    path('v1/auth/', include(auth)),
 ]
