@@ -1,4 +1,3 @@
-from django.db import IntegrityError
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
@@ -84,13 +83,6 @@ class SignupSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         max_length=254,
     )
-
-    def create(self, validated_data):
-        try:
-            user = User.objects.get_or_create(**validated_data)[0]
-        except IntegrityError:
-            raise serializers.ValidationError('Такая запись уже существует')
-        return user
 
     class Meta:
         fields = ('username', 'email')
