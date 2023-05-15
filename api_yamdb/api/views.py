@@ -33,7 +33,7 @@ from api.serializers import (
     UserRoleSerializer,
     UserSerializer,
 )
-from reviews.models import Category, Genre, Title, User, Review
+from reviews.models import Category, Genre, Review, Title, User
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -48,7 +48,7 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(
         methods=['get', 'patch'],
         detail=False,
-        url_path=settings.RESERVED_USERNAMES[0],
+        url_path=settings.RESERVED_USERNAMES_ME,
         permission_classes=(IsAuthenticated,),
     )
     def get_patch(self, request):
@@ -68,9 +68,9 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class TitleVewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.annotate(
-        rating=Avg('reviews__score')
-    ).order_by('name')
+    queryset = Title.objects.annotate(rating=Avg('reviews__score')).order_by(
+        'name'
+    )
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -81,7 +81,7 @@ class TitleVewSet(viewsets.ModelViewSet):
         return TitleSerializer
 
 
-class CategoryGenreListCreateDestroyMixin(
+class CategoryGenreListCreateDestroyViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
@@ -93,12 +93,12 @@ class CategoryGenreListCreateDestroyMixin(
     search_fields = ('name',)
 
 
-class CategoriesViewSet(CategoryGenreListCreateDestroyMixin):
+class CategoriesViewSet(CategoryGenreListCreateDestroyViewSet):
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
 
 
-class GenresViewSet(CategoryGenreListCreateDestroyMixin):
+class GenresViewSet(CategoryGenreListCreateDestroyViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenresSerializer
 
@@ -108,17 +108,13 @@ class ReviewVeiewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminAuthorModeratorOrReadOnly]
 
     def get_title(self):
-
-        return get_object_or_404(
-            Title, pk=self.kwargs.get('title_id')
-        )
+        return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
 
     def get_queryset(self):
         return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
-        title = self.get_title()
-        serializer.save(author=self.request.user, title=title)
+        serializer.save(author=self.request.user, title=self.get_title())
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -126,11 +122,10 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminAuthorModeratorOrReadOnly]
 
     def get_review(self):
-
         return get_object_or_404(
             Review,
             id=self.kwargs.get('review_id'),
-            title__id=self.kwargs.get('title_id')
+            title__id=self.kwargs.get('title_id'),
         )
 
     def get_queryset(self):
@@ -154,7 +149,8 @@ class SignupView(CreateAPIView):
                     **{value: serializer.validated_data[value]}
                 ).exists():
                     raise ValidationError(
-                        {value: ["Такое значение уже существует"]}
+                        f'Пользователь с {value}: '
+                        f'{serializer.validated_data[value]} уже существует'
                     )
         confirmation_code = default_token_generator.make_token(user)
         email_data = {
