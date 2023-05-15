@@ -156,7 +156,7 @@ class SignupView(CreateAPIView):
         confirmation_code = default_token_generator.make_token(user)
         email_data = {
             'subject': 'Добро пожаловать на наш сайт!',
-            'message': f'Ваш confirmation_code: {confirmation_code}',
+            'message': f'Ваш код подтверждения: {confirmation_code}',
             'from_email': settings.TOKEN_EMAIL,
             'recipient_list': [user.email],
         }

@@ -1,14 +1,14 @@
 import csv
 import os
-from api_yamdb.settings import BASE_DIR
 
+from api_yamdb.settings import BASE_DIR
 from reviews.models import (
     Category,
     Comment,
     Genre,
+    GenreTitle,
     Review,
     Title,
-    GenreTitle,
     User,
 )
 

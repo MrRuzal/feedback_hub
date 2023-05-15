@@ -3,10 +3,18 @@ from django.db import IntegrityError
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
+from reviews.models import (
+    MAX_CHAR_LENGTH,
+    Category,
+    Comment,
+    Genre,
+    Review,
+    Title,
+    User,
+)
 from reviews.validators import validate_username, validate_username_bad_sign
-from reviews.models import Category, Comment, Genre, Review, Title, User
 
-MAX_USERNAME_LENGTH = 150
+MAX_CHAR_LENGTH = 150
 
 
 class CategoriesSerializer(serializers.ModelSerializer):

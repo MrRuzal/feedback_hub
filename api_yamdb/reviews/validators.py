@@ -1,7 +1,7 @@
 import re
 
-from rest_framework.serializers import ValidationError
 from django.utils import timezone
+from rest_framework.serializers import ValidationError
 
 RESERVED_USERNAMES = ['me']
 
