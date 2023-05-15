@@ -191,9 +191,3 @@ class GenreTitle(models.Model):
 
     def __str__(self):
         return f'{self.title} {self.genre}'
-
-
-class FinishReg(models.Model):
-    username = models.CharField(max_length=150)
-    email = models.EmailField()
-    finish = models.BooleanField(default=False)
