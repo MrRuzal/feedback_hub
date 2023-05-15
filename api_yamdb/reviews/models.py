@@ -172,7 +172,7 @@ class Review(AbstractReviewComment):
         ]
 
     def __str__(self):
-        return f'{super()} {self.title} {self.score}'
+        return f'{super()} {self.title} {self.score} '
 
 
 class Comment(AbstractReviewComment):
