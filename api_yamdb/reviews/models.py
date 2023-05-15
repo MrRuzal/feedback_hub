@@ -163,7 +163,6 @@ class Review(AbstractReviewComment):
     )
 
     class Meta(AbstractReviewComment.Meta):
-        abstract = False
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
         constraints = [
@@ -173,7 +172,7 @@ class Review(AbstractReviewComment):
         ]
 
     def __str__(self):
-        return f'{super()} {self.title}'
+        return f'{super()} {self.title} {self.score}'
 
 
 class Comment(AbstractReviewComment):
@@ -182,7 +181,6 @@ class Comment(AbstractReviewComment):
     )
 
     class Meta(AbstractReviewComment.Meta):
-        abstract = False
         verbose_name = 'Коментария'
         verbose_name_plural = 'Коментарии'
 
