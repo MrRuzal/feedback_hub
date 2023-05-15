@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
@@ -130,9 +131,10 @@ class ReviewSerializer(serializers.ModelSerializer):
         if not request.method == 'POST':
             return attrs
 
-        title_id = self.context.get('view').kwargs['title_id']
+        title_id = self.context.get('view').kwargs.get('title_id')
+        title = get_object_or_404(Title, id=title_id)
         author = self.context.get('request').user
-        if Review.objects.filter(author=author, title=title_id).exists():
+        if Review.objects.filter(author=author, title=title).exists():
             raise serializers.ValidationError(
                 'Нельзя оставить отзыв на одно произведение дважды'
             )
