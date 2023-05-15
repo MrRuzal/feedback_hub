@@ -7,7 +7,7 @@ from django.core.validators import (
 from django.db import models
 from rest_framework import status
 
-from reviews.validators import validet_year, validate_username
+from reviews.validators import validate_year, validate_username
 
 
 class User(AbstractUser):
@@ -73,7 +73,7 @@ class User(AbstractUser):
         return self.username
 
 
-class NameAndSlugAbstarct(models.Model):
+class NameAndSlugAbstract(models.Model):
     name = models.CharField(max_length=256, verbose_name='Название')
     slug = models.SlugField(
         max_length=50,
@@ -82,23 +82,24 @@ class NameAndSlugAbstarct(models.Model):
 
     class Meta:
         abstract = True
+        ordering = ('name',)
 
     def __str__(self):
         return self.name
 
 
-class Category(NameAndSlugAbstarct):
-    class Meta:
+class Category(NameAndSlugAbstract):
+    class Meta(NameAndSlugAbstract.Meta):
+        abstract = False
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
-        ordering = ('name',)
 
 
-class Genre(NameAndSlugAbstarct):
-    class Meta:
+class Genre(NameAndSlugAbstract):
+    class Meta(NameAndSlugAbstract.Meta):
+        abstract = False
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
-        ordering = ('name',)
 
 
 class Title(models.Model):
@@ -107,7 +108,7 @@ class Title(models.Model):
         verbose_name='название',
     )
     year = models.SmallIntegerField(
-        validators=(validet_year,), verbose_name='Год выпуска'
+        validators=(validate_year,), verbose_name='Год выпуска'
     )
     description = models.TextField(verbose_name='Описание', blank=True)
     category = models.ForeignKey(
@@ -146,7 +147,10 @@ class AbstractReviewComment(models.Model):
 
     class Meta:
         abstract = True
-        ordering = ['-pub_date']
+        ordering = ('-pub_date',)
+
+    def __str__(self):
+        return f'{self.author.username}'
 
 
 class Review(AbstractReviewComment):
@@ -159,7 +163,8 @@ class Review(AbstractReviewComment):
         validators=[MaxValueValidator(10), MinValueValidator(1)],
     )
 
-    class Meta:
+    class Meta(AbstractReviewComment.Meta):
+        abstract = False
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
         constraints = [
@@ -169,7 +174,7 @@ class Review(AbstractReviewComment):
         ]
 
     def __str__(self):
-        return f'{self.author.username} {self.title}'
+        return f'{super()} {self.title}'
 
 
 class Comment(AbstractReviewComment):
@@ -177,12 +182,13 @@ class Comment(AbstractReviewComment):
         Review, on_delete=models.CASCADE, related_name='comments'
     )
 
-    class Meta:
+    class Meta(AbstractReviewComment.Meta):
+        abstract = False
         verbose_name = 'Коментария'
         verbose_name_plural = 'Коментарии'
 
     def __str__(self):
-        return f'{self.author.username} {self.review}'
+        return f'{super()} {self.review}'
 
 
 class GenreTitle(models.Model):

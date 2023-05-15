@@ -2,9 +2,12 @@ from django.utils import timezone
 from rest_framework.serializers import ValidationError
 
 
-def validet_year(year):
+def validate_year(year):
     if year > timezone.now().year:
-        raise ValidationError('Такого года быть не может')
+        raise ValidationError(
+            f'Год не может быть больше чем {timezone.now().year}'
+            f'Вы ввели {year}'
+        )
 
 
 def validate_username(value):
