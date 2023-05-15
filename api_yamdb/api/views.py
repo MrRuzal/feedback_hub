@@ -68,9 +68,9 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class TitleVewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.order_by('name').annotate(
+    queryset = Title.objects.annotate(
         rating=Avg('reviews__score')
-    )
+    ).order_by('name')
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -109,10 +109,9 @@ class ReviewVeiewSet(viewsets.ModelViewSet):
 
     def get_title(self):
 
-        title = get_object_or_404(
+        return get_object_or_404(
             Title, pk=self.kwargs.get('title_id')
         )
-        return title
 
     def get_queryset(self):
         return self.get_title().reviews.all()

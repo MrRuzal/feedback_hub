@@ -124,12 +124,8 @@ class ReviewSerializer(serializers.ModelSerializer):
             return attrs
 
         title_id = self.context.get('view').kwargs.get('title_id')
-        user = request.user
-        if not Title.objects.filter(id=title_id).exists():
-            raise serializers.ValidationError(
-                'Произведение с указанным ключом не существует'
-            )
-        if user.reviews.filter(title_id=title_id).exists():
+        author = self.context.get('request').user
+        if Review.objects.filter(author=author, title=title_id).exists():
             raise serializers.ValidationError(
                 'Нельзя оставить отзыв на одно произведение дважды'
             )
