@@ -11,6 +11,9 @@ from reviews.validators import validate_year, validate_username
 
 MAX_CHAR_LENGTH = 150
 MAX_EMAIL_LENGTH = 254
+AUTHOR_TEXT_PUBDATE = 'Автор: {}> Текст: {:.15}> Дата публикации: {}'
+REVIEW = '{}> Произведение: {}> Оценка: {}'
+COMMENT = '{}> Отзыв: {:.}'
 
 
 class Role(models.TextChoices):
@@ -72,7 +75,7 @@ class User(AbstractUser):
         return self.username
 
 
-class NameAndSlugAbstract(models.Model):
+class NameAndSlugAbstractModel(models.Model):
     name = models.CharField(max_length=256, verbose_name='Название')
     slug = models.SlugField(
         max_length=50,
@@ -87,16 +90,14 @@ class NameAndSlugAbstract(models.Model):
         return self.name
 
 
-class Category(NameAndSlugAbstract):
-    class Meta(NameAndSlugAbstract.Meta):
-        abstract = False
+class Category(NameAndSlugAbstractModel):
+    class Meta(NameAndSlugAbstractModel.Meta):
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
 
 
-class Genre(NameAndSlugAbstract):
-    class Meta(NameAndSlugAbstract.Meta):
-        abstract = False
+class Genre(NameAndSlugAbstractModel):
+    class Meta(NameAndSlugAbstractModel.Meta):
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
 
@@ -133,7 +134,7 @@ class Title(models.Model):
         return self.name
 
 
-class AbstractReviewComment(models.Model):
+class AuthorTextPubDateAbstractModel(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='%(class)ss'
     )
@@ -149,10 +150,12 @@ class AbstractReviewComment(models.Model):
         ordering = ('-pub_date',)
 
     def __str__(self):
-        return f'{self.author.username}'
+        return AUTHOR_TEXT_PUBDATE.format(
+            self.author.username, self.text, self.pub_date
+        )
 
 
-class Review(AbstractReviewComment):
+class Review(AuthorTextPubDateAbstractModel):
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='reviews'
     )
@@ -162,8 +165,7 @@ class Review(AbstractReviewComment):
         validators=[MaxValueValidator(10), MinValueValidator(1)],
     )
 
-    class Meta(AbstractReviewComment.Meta):
-        abstract = False
+    class Meta(AuthorTextPubDateAbstractModel.Meta):
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
         constraints = [
@@ -173,21 +175,20 @@ class Review(AbstractReviewComment):
         ]
 
     def __str__(self):
-        return f'{super()} {self.title}'
+        return REVIEW.format(super(), self.title.name, self.score)
 
 
-class Comment(AbstractReviewComment):
+class Comment(AuthorTextPubDateAbstractModel):
     review = models.ForeignKey(
         Review, on_delete=models.CASCADE, related_name='comments'
     )
 
-    class Meta(AbstractReviewComment.Meta):
-        abstract = False
+    class Meta(AuthorTextPubDateAbstractModel.Meta):
         verbose_name = 'Коментария'
         verbose_name_plural = 'Коментарии'
 
     def __str__(self):
-        return f'{super()} {self.review}'
+        return COMMENT.format(super(), self.review.text)
 
 
 class GenreTitle(models.Model):

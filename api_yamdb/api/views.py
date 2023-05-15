@@ -81,7 +81,7 @@ class TitleVewSet(viewsets.ModelViewSet):
         return TitleSerializer
 
 
-class CategoryGenreListCreateDestroyMixin(
+class CategoryGenreListCreateDestroyViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
@@ -93,12 +93,12 @@ class CategoryGenreListCreateDestroyMixin(
     search_fields = ('name',)
 
 
-class CategoriesViewSet(CategoryGenreListCreateDestroyMixin):
+class CategoriesViewSet(CategoryGenreListCreateDestroyViewSet):
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
 
 
-class GenresViewSet(CategoryGenreListCreateDestroyMixin):
+class GenresViewSet(CategoryGenreListCreateDestroyViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenresSerializer
 
@@ -108,10 +108,7 @@ class ReviewVeiewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminAuthorModeratorOrReadOnly]
 
     def get_title(self):
-
-        return get_object_or_404(
-            Title, pk=self.kwargs.get('title_id')
-        )
+        return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
 
     def get_queryset(self):
         return self.get_title().reviews.all()
@@ -129,11 +126,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         title_id = self.kwargs.get('title_id')
         review_id = self.kwargs.get('review_id')
 
-        return get_object_or_404(
-            Review,
-            id=review_id,
-            title__id=title_id
-        )
+        return get_object_or_404(Review, id=review_id, title__id=title_id)
 
     def get_queryset(self):
         return self.get_review().comments.all()

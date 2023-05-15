@@ -34,14 +34,17 @@ class TitleListSerializer(serializers.ModelSerializer):
     rating = serializers.IntegerField(read_only=True)
 
     class Meta:
-        fields = '__all__'
-        model = Title
-        read_only_fields = (
+        fields = (
             'id',
             'name',
             'year',
+            'rating',
             'description',
+            'genre',
+            'category',
         )
+        model = Title
+        read_only_fields = ('__all__',)
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -53,7 +56,14 @@ class TitleSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = '__all__'
+        fields = (
+            'id',
+            'name',
+            'year',
+            'description',
+            'genre',
+            'category',
+        )
         model = Title
 
     def to_representation(self, instance):
@@ -120,7 +130,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         if not request.method == 'POST':
             return attrs
 
-        title_id = self.context.get('view').kwargs.get('title_id')
+        title_id = self.context.get('view').kwargs['title_id']
         author = self.context.get('request').user
         if Review.objects.filter(author=author, title=title_id).exists():
             raise serializers.ValidationError(
