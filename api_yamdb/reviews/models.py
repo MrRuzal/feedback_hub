@@ -19,7 +19,7 @@ class Role(models.TextChoices):
     MODERATOR = 'moderator', 'модератор'
     ADMIN = 'admin', 'администратор'
 
-    @property
+    @classmethod
     def value_length(cls):
         return len(max(cls.values, key=len))
 
@@ -50,7 +50,7 @@ class User(AbstractUser):
         verbose_name='Биография',
     )
     role = models.CharField(
-        max_length=Role.value_length,
+        max_length=Role.value_length(),
         choices=Role.choices,
         default=Role.USER,
         verbose_name='Роли',
