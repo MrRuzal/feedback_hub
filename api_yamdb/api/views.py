@@ -33,7 +33,7 @@ from api.serializers import (
     UserRoleSerializer,
     UserSerializer,
 )
-from reviews.models import Category, Genre, Title, User, Review
+from reviews.models import Category, Genre, Review, Title, User
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -81,7 +81,7 @@ class TitleVewSet(viewsets.ModelViewSet):
         return TitleSerializer
 
 
-class CategoryGenreListCreateDestroyMixin(
+class CategoryGenreListCreateDestroyViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
@@ -93,12 +93,12 @@ class CategoryGenreListCreateDestroyMixin(
     search_fields = ('name',)
 
 
-class CategoriesViewSet(CategoryGenreListCreateDestroyMixin):
+class CategoriesViewSet(CategoryGenreListCreateDestroyViewSet):
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
 
 
-class GenresViewSet(CategoryGenreListCreateDestroyMixin):
+class GenresViewSet(CategoryGenreListCreateDestroyViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenresSerializer
 
@@ -123,11 +123,10 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminAuthorModeratorOrReadOnly]
 
     def get_review(self):
-
         return get_object_or_404(
             Review,
             id=self.kwargs.get('review_id'),
-            title__id=self.kwargs.get('title_id')
+            title__id=self.kwargs.get('title_id'),
         )
 
     def get_queryset(self):
