@@ -1,9 +1,7 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import (
-    MaxValueValidator,
-    MinValueValidator,
-)
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
 from reviews.validators import (
     validate_username,
     validate_username_bad_sign,
@@ -19,10 +17,6 @@ class Role(models.TextChoices):
     USER = 'user', 'пользователь'
     MODERATOR = 'moderator', 'модератор'
     ADMIN = 'admin', 'администратор'
-
-    @classmethod
-    def value_length(cls):
-        return len(max(cls.values, key=len))
 
 
 class User(AbstractUser):
@@ -51,7 +45,7 @@ class User(AbstractUser):
         verbose_name='Биография',
     )
     role = models.CharField(
-        max_length=Role.value_length(),
+        max_length=len(max(Role.values, key=len)),
         choices=Role.choices,
         default=Role.USER,
         verbose_name='Роли',
@@ -63,10 +57,10 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.role == Role.ADMIN
+        return self.role == Role.ADMIN or self.is_superuser
 
     @property
-    def is_moredator(self):
+    def is_moderator(self):
         return self.role == Role.MODERATOR
 
     class Meta:

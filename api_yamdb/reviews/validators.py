@@ -1,14 +1,13 @@
+from django.conf import settings
 import re
 
-from rest_framework.serializers import ValidationError
 from django.utils import timezone
-
-RESERVED_USERNAMES = ['me']
+from rest_framework.serializers import ValidationError
 
 
 def validate_username(value):
     """Убедитесь, что имя пользователя не равно зарезервированным никам."""
-    if value in RESERVED_USERNAMES:
+    if value in settings.RESERVED_USERNAMES:
         raise ValidationError(f"Имя пользователя '{value}' недопустимо.")
     return value
 
@@ -19,7 +18,7 @@ def validate_username_bad_sign(value):
     if invalid_chars:
         raise ValidationError(
             f"Имя пользователя содержит недопустимые символы: "
-            f"{', '.join(set(invalid_chars))}."
+            f"{''.join(set(invalid_chars))}"
         )
     return value
 
