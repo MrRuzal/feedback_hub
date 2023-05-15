@@ -20,6 +20,22 @@ class GenresSerializer(serializers.ModelSerializer):
         model = Genre
 
 
+class TitleListSerializer(serializers.ModelSerializer):
+    genre = GenresSerializer(read_only=True, many=True)
+    category = CategoriesSerializer(read_only=True)
+    rating = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        fields = '__all__'
+        model = Title
+        read_only_fields = (
+            'id',
+            'name',
+            'year',
+            'description',
+        )
+
+
 class TitleSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(
         slug_field='slug', many=True, queryset=Genre.objects.all()
@@ -34,24 +50,6 @@ class TitleSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         return TitleListSerializer(instance).data
-
-
-class TitleListSerializer(serializers.ModelSerializer):
-    genre = GenresSerializer(read_only=True, many=True)
-    category = CategoriesSerializer(read_only=True)
-    rating = serializers.IntegerField(read_only=True)
-
-    class Meta:
-        fields = (
-            'id',
-            'name',
-            'year',
-            'rating',
-            'description',
-            'genre',
-            'category',
-        )
-        model = Title
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -69,7 +67,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserRoleSerializer(UserSerializer):
     class Meta(UserSerializer.Meta):
-        read_only_fields = ['role']
+        read_only_fields = ('role',)
 
 
 class TokenSerializer(serializers.Serializer):
