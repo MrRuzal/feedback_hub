@@ -32,6 +32,10 @@ pip install -r requirements.txt
 ```bash
 python manage.py migrate
 ```
+Заполнить базу данных:
+```bash
+python manage.py runscript
+```
 Запустить проект:  
 ```bash
 python manage.py runserver
