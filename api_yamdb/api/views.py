@@ -54,15 +54,17 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_patch(self, request):
         user = get_object_or_404(User, username=self.request.user)
         if request.method == 'GET':
-            serializer = UserRoleSerializer(user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        if request.method == 'PATCH':
-            serializer = UserRoleSerializer(
-                user, data=request.data, partial=True
+            return Response(
+                UserRoleSerializer(user).data, status=status.HTTP_200_OK
             )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = UserRoleSerializer(
+            user,
+            data=request.data,
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class TitleVewSet(viewsets.ModelViewSet):
@@ -161,7 +163,6 @@ class SignupView(CreateAPIView):
             'recipient_list': [user.email],
         }
         send_mail(**email_data)
-
         return Response({'email': user.email, 'username': user.username})
 
 
