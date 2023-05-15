@@ -33,7 +33,7 @@ from api.serializers import (
     UserRoleSerializer,
     UserSerializer,
 )
-from reviews.models import Category, Genre, Title, User
+from reviews.models import Category, Genre, Title, User, Review
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -68,9 +68,9 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class TitleVewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.order_by('name').annotate(
+    queryset = Title.objects.annotate(
         rating=Avg('reviews__score')
-    )
+    ).order_by('name')
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -108,15 +108,13 @@ class ReviewVeiewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminAuthorModeratorOrReadOnly]
 
     def get_title(self):
-        if not hasattr(self, 'title'):
-            self.title = get_object_or_404(
-                Title, pk=self.kwargs.get('title_id')
-            )
-        return self.title
+
+        return get_object_or_404(
+            Title, pk=self.kwargs.get('title_id')
+        )
 
     def get_queryset(self):
-        title = self.get_title()
-        return title.reviews.all()
+        return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
         title = self.get_title()
@@ -131,14 +129,14 @@ class CommentViewSet(viewsets.ModelViewSet):
         title_id = self.kwargs.get('title_id')
         review_id = self.kwargs.get('review_id')
 
-        title = get_object_or_404(Title, id=title_id)
-        review = get_object_or_404(title.reviews, id=review_id)
-
-        return review
+        return get_object_or_404(
+            Review,
+            id=review_id,
+            title__id=title_id
+        )
 
     def get_queryset(self):
-        review = self.get_review()
-        return review.comments.all()
+        return self.get_review().comments.all()
 
     def perform_create(self, serializer):
         review = self.get_review()
