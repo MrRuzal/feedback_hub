@@ -2,7 +2,7 @@ from django.db import IntegrityError
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
-from api.validators import validate_username, validate_username_bad_sign
+from reviews.models import validate_username, validate_username_bad_sign
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
 USER_FIELDS = ['username', 'email', 'bio', 'role', 'first_name', 'last_name']
@@ -118,11 +118,15 @@ class ReviewSerializer(serializers.ModelSerializer):
         не оставляет отзыв на одно произведение дважды.
         """
         request = self.context.get('request')
-        if not (request and request.method == 'POST'):
+        if not request.method == 'POST':
             return attrs
 
         title_id = self.context.get('view').kwargs.get('title_id')
         user = request.user
+        if not Title.objects.filter(id=title_id).exists():
+            raise serializers.ValidationError(
+                'Произведение с указанным ключом не существует'
+            )
         if user.reviews.filter(title_id=title_id).exists():
             raise serializers.ValidationError(
                 'Нельзя оставить отзыв на одно произведение дважды'

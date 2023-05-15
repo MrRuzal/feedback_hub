@@ -32,7 +32,7 @@ from api.serializers import (
     UserRoleSerializer,
     UserSerializer,
 )
-from reviews.models import Category, Genre, Title, User
+from reviews.models import Category, Genre, Title, User, Review
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -105,15 +105,14 @@ class ReviewVeiewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminAuthorModeratorOrReadOnly]
 
     def get_title(self):
-        if not hasattr(self, 'title'):
-            self.title = get_object_or_404(
-                Title, pk=self.kwargs.get('title_id')
-            )
-        return self.title
+
+        title = get_object_or_404(
+            Title, pk=self.kwargs.get('title_id')
+        )
+        return title
 
     def get_queryset(self):
-        title = self.get_title()
-        return title.reviews.all().order_by('-pub_date')
+        return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
         title = self.get_title()
@@ -128,14 +127,15 @@ class CommentViewSet(viewsets.ModelViewSet):
         title_id = self.kwargs.get('title_id')
         review_id = self.kwargs.get('review_id')
 
-        title = get_object_or_404(Title, id=title_id)
-        review = get_object_or_404(title.reviews, id=review_id)
-
-        return review
+        return get_object_or_404(
+            Review,
+            id=review_id,
+            title__id=title_id
+        )
 
     def get_queryset(self):
         review = self.get_review()
-        return review.comments.all().order_by('-pub_date')
+        return review.comments.all()
 
     def perform_create(self, serializer):
         review = self.get_review()
