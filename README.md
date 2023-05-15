@@ -90,6 +90,6 @@ JWT
 
 ## Авторы: 
 
-- Автор 1 - Рузал Закиров [Ruzal-Z](https://github.com/Ruzal-Z) - Auth/Users  
-- Автор 2 - Андрей Габриэлис [Jeinter](https://github.com/Jeinter) - Categories/Genres/Titles  
-- Автор 3 - Шамиль Эбзеев [Em5ty](https://github.com/Em5ty) - Review/Comments  
+Рузал Закиров [Ruzal-Z](https://github.com/Ruzal-Z) - Auth/Users  
+Андрей Габриэлис [Jeinter](https://github.com/Jeinter) - Categories/Genres/Titles/Импорт данных из csv файлов  
+Шамиль Эбзеев [Em5ty](https://github.com/Em5ty) - Review/Comments  
