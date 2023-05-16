@@ -44,7 +44,7 @@ class TitleListSerializer(serializers.ModelSerializer):
             'category',
         )
         model = Title
-        read_only_fields = ('__all__',)
+        read_only_fields = fields
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -73,15 +73,15 @@ class TitleSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         max_length=MAX_CHAR_LENGTH,
-        validators=[
-            validate_username,
-            validate_username_bad_sign,
-            UniqueValidator(
-                queryset=User.objects.all(),
-                message='Пользователь уже существует',
-            ),
-        ],
     )
+
+    def validate_username(self, value):
+        validate_username(value)
+        validate_username_bad_sign(value)
+        queryset = User.objects.filter(username=value)
+        if queryset.exists():
+            raise serializers.ValidationError('Пользователь уже существует')
+        return value
 
     class Meta:
         fields = (

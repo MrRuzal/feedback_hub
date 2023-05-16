@@ -7,7 +7,7 @@ from rest_framework.serializers import ValidationError
 
 def validate_username(value):
     """Убедитесь, что имя пользователя не равно зарезервированным никам."""
-    if value in settings.RESERVED_USERNAMES_ME:
+    if value in settings.RESERVED_VALUE['RESERVED_NAME']:
         raise ValidationError(f"Имя пользователя '{value}' недопустимо.")
     return value
 
@@ -26,6 +26,5 @@ def validate_username_bad_sign(value):
 def validate_year(year):
     if year > timezone.now().year:
         raise ValidationError(
-            f'Год не может быть больше чем {timezone.now().year}'
-            f'{year} > {timezone.now().year}'
+            f'{year} не должен превышать {timezone.now().year}'
         )
