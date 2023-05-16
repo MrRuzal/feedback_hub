@@ -48,7 +48,7 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(
         methods=['get', 'patch'],
         detail=False,
-        url_path=settings.RESERVED_USERNAMES_ME,
+        url_path=settings.RESERVED_VALUE['RESERVED_NAME'],
         permission_classes=(IsAuthenticated,),
     )
     def get_patch(self, request):
