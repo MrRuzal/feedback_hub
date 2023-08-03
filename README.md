@@ -1,15 +1,15 @@
-api_yamdb
+FeedbackHub
 ===============
 
 Описание:
 ----
-Проект YaMDb собирает отзывы пользователей на различные произведения.
+Проект FeedbackHub собирает отзывы пользователей на различные произведения.
 
 Как запустить проект:  
 ----
 Клонировать репозиторий и перейти в него в командной строке:
 ```bash
-git clone git@github.com:Ruzal-Z/api_yamdb.git
+git clone git@github.com:Ruzal-Z/feedback_hub.git
 ```
 ```bash
 cd api_yamdb
