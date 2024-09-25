@@ -9,7 +9,7 @@ FeedbackHub
 ----
 Клонировать репозиторий и перейти в него в командной строке:
 ```bash
-git clone git@github.com:devbkd/feedback_hub.git
+git clone git@github.com:MrRuzal/feedback_hub.git
 ```
 ```bash
 cd api_yamdb
@@ -90,6 +90,6 @@ JWT
 
 ## Авторы: 
 
-Рузал Закиров [devbkd](https://github.com/devbkd) - Auth/Users  
+Рузал Закиров [devbkd](https://github.com/MrRuzal) - Auth/Users  
 Андрей Габриэлис [Jeinter](https://github.com/Jeinter) - Categories/Genres/Titles/Импорт данных из csv файлов  
 Шамиль Эбзеев [Em5ty](https://github.com/Em5ty) - Review/Comments  
